@@ -108,7 +108,9 @@
 
     <!-- Profile header -->
     <div class="profile-hero">
-      <div class="profile-hero-avatar" id="profile-avatar">T</div>
+      <div class="profile-hero-avatar" id="profile-avatar" onclick="openAvatarPicker()">
+        <span class="avatar-edit-hint">изменить</span>
+      </div>
       <div class="profile-hero-info">
         <h2 class="profile-hero-name" id="profile-name">Игрок</h2>
         <div class="profile-hero-coins">🪙 <span id="profile-coins-count">0</span></div>
@@ -180,6 +182,16 @@
       <span class="nav-lbl">Рейтинг</span>
     </button>
   </nav>
+
+  <!-- ======= AVATAR PICKER MODAL ======= -->
+  <div id="avatar-modal" class="modal hidden">
+    <div class="modal-backdrop" id="avatar-modal-backdrop"></div>
+    <div class="modal-sheet">
+      <h3 class="modal-title">Выбери покемона</h3>
+      <p class="modal-sub">Аватар вашего профиля</p>
+      <div class="avatar-picker-grid" id="avatar-picker-grid"></div>
+    </div>
+  </div>
 
   <!-- ======= SELL MODAL ======= -->
   <div id="sell-modal" class="modal hidden">

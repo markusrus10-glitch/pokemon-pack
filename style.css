@@ -131,27 +131,54 @@ html, body {
 
 /* Trainer section */
 .trainer-section {
-  display: flex; align-items: center; gap: 14px;
-  cursor: pointer;
+  display: flex; align-items: center; gap: 12px;
+  cursor: pointer; min-width: 0;
 }
 .trainer-avatar {
-  width: 52px; height: 52px; border-radius: 50%;
+  width: 52px; height: 52px; min-width: 52px; border-radius: 50%;
   background: linear-gradient(135deg, #e53935, #9c27b0);
   display: flex; align-items: center; justify-content: center;
-  font-size: 1.4rem; font-weight: 800; flex-shrink: 0;
+  font-size: 1.3rem; font-weight: 800; flex-shrink: 0;
   box-shadow: 0 0 20px rgba(156,39,176,0.5);
   border: 2px solid rgba(255,255,255,0.15);
+  overflow: hidden;
 }
-.trainer-meta { flex: 1; min-width: 0; }
-.trainer-name { font-size: 1rem; font-weight: 800; }
+.trainer-avatar img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4)); }
+.trainer-meta { flex: 1; min-width: 0; overflow: hidden; }
+.trainer-name { font-size: 1rem; font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .trainer-badge {
   font-size: 0.72rem; color: var(--gold);
-  margin-top: 3px;
-  display: flex; align-items: center; gap: 4px;
+  margin-top: 3px; white-space: nowrap;
 }
 .section-chevron {
   font-size: 1.5rem; color: var(--text-muted); flex-shrink: 0;
 }
+
+/* Pokemon avatar picker */
+.avatar-picker-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 10px; width: 100%; max-height: 55vh;
+  overflow-y: auto; -webkit-overflow-scrolling: touch;
+  padding: 4px 2px;
+}
+.avatar-picker-item {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  background: var(--bg-section); border: 2px solid var(--border);
+  border-radius: 12px; padding: 8px 4px; cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.avatar-picker-item:active  { background: var(--bg-section2); }
+.avatar-picker-item.selected { border-color: var(--gold); background: rgba(255,215,0,0.08); }
+.avatar-picker-img { width: 52px; height: 52px; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4)); }
+.avatar-picker-name { font-size: 0.58rem; color: var(--text-muted); text-align: center; }
+.picker-rarity-dot {
+  width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
+}
+.picker-rarity-dot.common     { background: var(--card-glow-common); }
+.picker-rarity-dot.uncommon   { background: var(--card-glow-uncommon); }
+.picker-rarity-dot.rare       { background: var(--card-glow-rare); }
+.picker-rarity-dot.ultra-rare { background: var(--card-glow-ultra-rare); }
+.picker-rarity-dot.crown      { background: var(--card-glow-crown); }
 
 /* Deck section */
 .deck-section { cursor: pointer; }
@@ -470,30 +497,50 @@ html, body {
    PROFILE SCREEN
    ============================================================ */
 .profile-hero {
-  width: 100%; display: flex; align-items: center; gap: 14px;
+  width: 100%; display: flex; align-items: center; gap: 12px;
   background: var(--bg-section);
   border: 1px solid var(--border);
-  border-radius: var(--r); padding: 16px;
+  border-radius: var(--r); padding: 14px 16px;
   margin-bottom: 12px; flex-shrink: 0;
+  min-width: 0;
 }
 .profile-hero-avatar {
-  width: 56px; height: 56px; border-radius: 50%;
+  width: 56px; height: 56px; min-width: 56px; border-radius: 50%;
   background: linear-gradient(135deg, #e53935, #9c27b0);
   display: flex; align-items: center; justify-content: center;
   font-size: 1.4rem; font-weight: 800; flex-shrink: 0;
   box-shadow: 0 0 20px rgba(229,57,53,0.4);
-  border: 2px solid rgba(255,255,255,0.12);
+  border: 2px solid rgba(255,255,255,0.15);
+  cursor: pointer; overflow: hidden; position: relative;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
-.profile-hero-info { flex: 1; min-width: 0; }
-.profile-hero-name { font-size: 1.05rem; font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.profile-hero-coins { font-size: 0.82rem; color: var(--gold); margin-top: 3px; }
-.profile-hero-value { text-align: right; flex-shrink: 0; }
+.profile-hero-avatar:active { border-color: var(--gold); box-shadow: 0 0 20px rgba(255,215,0,0.4); }
+.profile-hero-avatar img {
+  width: 100%; height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+}
+.avatar-edit-hint {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  background: rgba(0,0,0,0.55); font-size: 0.5rem;
+  text-align: center; padding: 2px 0; color: rgba(255,255,255,0.8);
+  letter-spacing: 0.02em;
+}
+.profile-hero-info { flex: 1; min-width: 0; overflow: hidden; }
+.profile-hero-name {
+  font-size: 1rem; font-weight: 800;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  max-width: 100%;
+}
+.profile-hero-coins { font-size: 0.8rem; color: var(--gold); margin-top: 3px; white-space: nowrap; }
+.profile-hero-value { text-align: right; flex-shrink: 0; min-width: 70px; }
 .hero-value-num {
-  display: block; font-size: 1.4rem; font-weight: 900;
+  display: block; font-size: 1.3rem; font-weight: 900;
   background: linear-gradient(135deg, var(--gold), var(--gold-dark));
   -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  white-space: nowrap;
 }
-.hero-value-label { font-size: 0.6rem; color: var(--text-muted); }
+.hero-value-label { font-size: 0.58rem; color: var(--text-muted); white-space: nowrap; }
 
 /* Daily reward */
 .reward-banner {

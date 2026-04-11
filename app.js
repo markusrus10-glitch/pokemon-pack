@@ -42,6 +42,7 @@ const KEY_COLLECTION    = 'pokemon_collection_v1';
 const KEY_COINS         = 'pokemon_coins_v1';
 const KEY_LAST_REWARD   = 'pokemon_last_reward_v1';
 const KEY_USERNAME      = 'pokemon_username_v1';
+const KEY_AVATAR        = 'pokemon_avatar_v1';
 const KEY_OLD_PACK      = 'pokemon_pack_v1';
 
 // Leaderboard
@@ -479,11 +480,10 @@ function renderHomeScreen() {
   const collection = getCollection();
   const coins = getCoins();
 
-  // Trainer name
   const nameEl = document.getElementById('home-trainer-name');
   const avatarEl = document.getElementById('home-avatar');
   if (nameEl) nameEl.textContent = name;
-  if (avatarEl) avatarEl.textContent = name.charAt(0).toUpperCase();
+  if (avatarEl) applyAvatarToEl(avatarEl, getAvatarId(), name.charAt(0).toUpperCase());
 
   // Header coins
   const headerCoins = document.getElementById('header-coins');
@@ -553,8 +553,8 @@ function renderProfileScreen() {
 
   // Header
   document.getElementById('profile-name').textContent = name;
-  document.getElementById('profile-avatar').textContent = name.charAt(0).toUpperCase();
   document.getElementById('profile-coins-count').textContent = coins.toLocaleString();
+  applyAvatarToEl(document.getElementById('profile-avatar'), getAvatarId(), name.charAt(0).toUpperCase());
   document.getElementById('profile-total-value').textContent = totalValue.toLocaleString();
 
   // Stats
@@ -739,6 +739,108 @@ async function submitCurrentScore() {
 }
 
 // ============================================================
+// AVATAR PICKER
+// ============================================================
+
+// Flat list of all pokemon sorted by rarity for picker
+const ALL_POKEMON_FOR_PICKER = [
+  ...POKEMON_POOL.crown.map(p    => ({...p, rarity:'crown',    rarityCSS:'crown'})),
+  ...POKEMON_POOL.ultraRare.map(p => ({...p, rarity:'ultraRare', rarityCSS:'ultra-rare'})),
+  ...POKEMON_POOL.rare.map(p     => ({...p, rarity:'rare',      rarityCSS:'rare'})),
+  ...POKEMON_POOL.uncommon.map(p  => ({...p, rarity:'uncommon',  rarityCSS:'uncommon'})),
+  ...POKEMON_POOL.common.map(p   => ({...p, rarity:'common',    rarityCSS:'common'})),
+];
+
+function getAvatarId() {
+  return parseInt(localStorage.getItem(KEY_AVATAR) || '0', 10);
+}
+function setAvatarId(id) {
+  localStorage.setItem(KEY_AVATAR, String(id));
+}
+
+function applyAvatarToEl(el, avatarId, fallbackLetter) {
+  el.innerHTML = '';
+  if (avatarId) {
+    const img = document.createElement('img');
+    img.src = getSpriteUrl(avatarId);
+    img.alt = '';
+    img.onerror = () => {
+      el.innerHTML = fallbackLetter;
+    };
+    el.appendChild(img);
+  } else {
+    el.textContent = fallbackLetter;
+  }
+  // Re-add edit hint if profile avatar
+  if (el.id === 'profile-avatar') {
+    const hint = document.createElement('span');
+    hint.className = 'avatar-edit-hint';
+    hint.textContent = 'изменить';
+    el.appendChild(hint);
+  }
+}
+
+window.openAvatarPicker = function() {
+  const modal  = document.getElementById('avatar-modal');
+  const grid   = document.getElementById('avatar-picker-grid');
+  const currId = getAvatarId();
+
+  grid.innerHTML = '';
+  ALL_POKEMON_FOR_PICKER.forEach(pokemon => {
+    const item = document.createElement('div');
+    item.className = 'avatar-picker-item' + (pokemon.id === currId ? ' selected' : '');
+    item.dataset.id = pokemon.id;
+
+    const dot = document.createElement('div');
+    dot.className = `picker-rarity-dot ${pokemon.rarityCSS}`;
+
+    const img = document.createElement('img');
+    img.className = 'avatar-picker-img';
+    img.src = getSpriteUrl(pokemon.id);
+    img.alt = pokemon.name;
+    img.loading = 'lazy';
+
+    const name = document.createElement('div');
+    name.className = 'avatar-picker-name';
+    name.textContent = pokemon.name;
+
+    item.appendChild(dot);
+    item.appendChild(img);
+    item.appendChild(name);
+
+    item.addEventListener('click', () => {
+      selectAvatar(pokemon.id);
+      // Update selection highlight
+      grid.querySelectorAll('.avatar-picker-item').forEach(i => i.classList.remove('selected'));
+      item.classList.add('selected');
+    });
+
+    grid.appendChild(item);
+  });
+
+  modal.classList.remove('hidden');
+};
+
+function selectAvatar(id) {
+  setAvatarId(id);
+  haptic('light');
+
+  const letter = getUsername().charAt(0).toUpperCase();
+
+  // Update profile avatar
+  const profAv = document.getElementById('profile-avatar');
+  if (profAv) applyAvatarToEl(profAv, id, letter);
+
+  // Update home avatar
+  const homeAv = document.getElementById('home-avatar');
+  if (homeAv) applyAvatarToEl(homeAv, id, letter);
+}
+
+function closeAvatarPicker() {
+  document.getElementById('avatar-modal').classList.add('hidden');
+}
+
+// ============================================================
 // MAIN
 // ============================================================
 
@@ -746,6 +848,19 @@ async function main() {
   initTelegram();
   initStarfield();
   migrateOldData();
+
+  // Apply saved avatar on load
+  const savedAvatar = getAvatarId();
+  const letter = getUsername().charAt(0).toUpperCase();
+  if (savedAvatar) {
+    const profAv = document.getElementById('profile-avatar');
+    const homeAv = document.getElementById('home-avatar');
+    if (profAv) applyAvatarToEl(profAv, savedAvatar, letter);
+    if (homeAv) applyAvatarToEl(homeAv, savedAvatar, letter);
+  }
+
+  // Avatar picker
+  document.getElementById('avatar-modal-backdrop').addEventListener('click', closeAvatarPicker);
 
   // Wire up daily reward button
   document.getElementById('daily-reward-btn').addEventListener('click', claimDailyReward);
