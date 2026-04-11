@@ -383,11 +383,12 @@ function showLoading(show) {
 // Global nav function (called from HTML onclick)
 window.navigate = function(dest) {
   if (dest === 'home') {
+    renderHomeScreen();
     showScreen('welcome', 'home');
   } else if (dest === 'profile') {
     renderProfileScreen();
     showScreen('profile', 'profile');
-    submitCurrentScore(); // async, fire and forget
+    submitCurrentScore();
   } else if (dest === 'rating') {
     showScreen('rating', 'rating');
     loadRatingScreen();
@@ -465,6 +466,77 @@ function showResultsScreen(cards) {
     container.appendChild(el);
   });
   showScreen('results', 'home');
+}
+
+// ============================================================
+// HOME SCREEN
+// ============================================================
+
+let homeTimerInterval = null;
+
+function renderHomeScreen() {
+  const name = getUsername();
+  const collection = getCollection();
+  const coins = getCoins();
+
+  // Trainer name
+  const nameEl = document.getElementById('home-trainer-name');
+  const avatarEl = document.getElementById('home-avatar');
+  if (nameEl) nameEl.textContent = name;
+  if (avatarEl) avatarEl.textContent = name.charAt(0).toUpperCase();
+
+  // Header coins
+  const headerCoins = document.getElementById('header-coins');
+  if (headerCoins) headerCoins.textContent = `🪙 ${coins.toLocaleString()}`;
+
+  // Deck strip — show last 5 cards (sorted by rarity)
+  const strip = document.getElementById('home-deck-strip');
+  if (strip) {
+    strip.innerHTML = '';
+    if (collection.length === 0) {
+      const empty = document.createElement('div');
+      empty.className = 'deck-strip-empty';
+      empty.textContent = 'Открой первый пакет!';
+      strip.appendChild(empty);
+    } else {
+      const sorted = [...collection]
+        .sort((a, b) => RARITY_ORDER.indexOf(a.rarity) - RARITY_ORDER.indexOf(b.rarity))
+        .slice(0, 6);
+      sorted.forEach(card => {
+        const item = document.createElement('div');
+        item.className = `deck-strip-card rarity-${card.rarityCSS}`;
+        const img = document.createElement('img');
+        img.src = getSpriteUrl(card.id);
+        img.alt = card.name;
+        img.onerror = () => { img.style.opacity = '0.3'; };
+        item.appendChild(img);
+        strip.appendChild(item);
+      });
+    }
+  }
+
+  // Pack timer
+  updateHomePackTimer();
+  if (homeTimerInterval) clearInterval(homeTimerInterval);
+  homeTimerInterval = setInterval(updateHomePackTimer, 1000);
+}
+
+function updateHomePackTimer() {
+  const sub   = document.getElementById('home-pack-sub');
+  const timer = document.getElementById('home-pack-timer');
+  const btn   = document.getElementById('btn-open-pack');
+  if (!sub || !timer) return;
+
+  if (canClaimReward() && getCollection().length > 0) {
+    sub.textContent   = 'Ежедневная награда';
+    timer.textContent = 'Доступна!';
+  } else if (getCollection().length === 0) {
+    sub.textContent   = 'Первый пак';
+    timer.textContent = 'Бесплатно!';
+  } else {
+    sub.textContent   = 'Следующий пак через';
+    timer.textContent = formatTime(msUntilNextReward());
+  }
 }
 
 // ============================================================
@@ -616,7 +688,8 @@ function confirmSell() {
   addCoins(card.value);
   haptic('medium');
   closeSellModal();
-  renderProfileScreen(); // refresh
+  renderProfileScreen();
+  renderHomeScreen();
   submitCurrentScore();
 }
 
@@ -693,10 +766,10 @@ async function main() {
   const alreadyOpened = collection.length > 0;
 
   if (alreadyOpened) {
-    document.getElementById('already-opened-msg').classList.remove('hidden');
     document.getElementById('btn-open-pack').disabled = true;
   }
 
+  renderHomeScreen();
   showScreen('welcome', 'home');
 
   document.getElementById('btn-open-pack').addEventListener('click', async () => {

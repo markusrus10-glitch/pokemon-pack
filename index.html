@@ -3,26 +3,78 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Pokemon Pack Opening</title>
+  <title>Pokémon Паки</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
   <canvas id="starfield"></canvas>
+  <div class="map-grid"></div>
 
-  <!-- ======= SCREEN 1: Welcome ======= -->
+  <!-- ======= APP HEADER ======= -->
+  <header class="app-header" id="app-header">
+    <div class="app-header-inner">
+      <div class="app-header-icon">⬟</div>
+      <span class="app-header-title">POKÉ TCG: ПАКИ</span>
+      <div class="app-header-coins" id="header-coins">🪙 0</div>
+    </div>
+  </header>
+
+  <!-- ======= SCREEN 1: Home ======= -->
   <div id="screen-welcome" class="screen active has-nav">
-    <div class="logo-area">
-      <div class="pokeball-icon"></div>
-      <h1 class="game-title">Покемон<br>Паки</h1>
-      <p class="subtitle">Открой пакет и узнай, какие карточки тебе достались!</p>
+
+    <!-- Decorative Pokemon corners -->
+    <img class="deco-pokemon deco-bl" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/1.png" alt="" />
+    <img class="deco-pokemon deco-br" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/7.png" alt="" />
+
+    <!-- Trainer card -->
+    <div class="home-section trainer-section" onclick="navigate('profile')">
+      <div class="trainer-avatar" id="home-avatar">T</div>
+      <div class="trainer-meta">
+        <div class="trainer-name" id="home-trainer-name">Тренер</div>
+        <div class="trainer-badge">⭐ Тренер покемонов</div>
+      </div>
+      <span class="section-chevron">›</span>
     </div>
-    <div class="welcome-actions">
-      <button id="btn-open-pack" class="btn-primary">
-        <span class="btn-icon">✦</span> Открыть пакет
-      </button>
-      <p id="already-opened-msg" class="already-msg hidden">Пакет уже открыт — ждите ежедневную награду!</p>
+
+    <!-- My Deck / Collection preview -->
+    <div class="home-section deck-section" onclick="navigate('profile')">
+      <div class="home-section-header">
+        <span class="home-section-title">Моя колода</span>
+        <span class="section-chevron">›</span>
+      </div>
+      <div class="deck-strip" id="home-deck-strip">
+        <div class="deck-strip-empty">Открой первый пакет!</div>
+      </div>
     </div>
+
+    <!-- Booster Packs -->
+    <div class="home-section pack-section">
+      <div class="home-section-header">
+        <span class="home-section-title">Бустер паки</span>
+      </div>
+      <div class="pack-section-body">
+        <div class="pack-mini-visual">
+          <div class="pack-mini-ball"></div>
+          <div class="pack-mini-label">Kanto</div>
+        </div>
+        <div class="pack-section-info">
+          <div class="pack-section-sub" id="home-pack-sub">Следующий пак через</div>
+          <div class="pack-section-timer" id="home-pack-timer">Доступен!</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Big battle button -->
+    <button class="btn-battle" id="btn-open-pack">
+      <div class="btn-battle-ball">
+        <div class="btn-battle-ball-line"></div>
+        <div class="btn-battle-ball-center"></div>
+      </div>
+      <span>ОТКРЫТЬ ПАК</span>
+    </button>
+
+    <p id="already-opened-msg" class="already-msg hidden"></p>
   </div>
 
   <!-- ======= SCREEN 2: Pack Animation ======= -->
@@ -43,8 +95,8 @@
 
   <!-- ======= SCREEN 3: Results ======= -->
   <div id="screen-results" class="screen hidden has-nav">
-    <h2 class="results-title">Ваша коллекция!</h2>
-    <p class="results-subtitle">Вот карточки из вашего пакета:</p>
+    <h2 class="page-title">Ваша коллекция!</h2>
+    <p class="page-subtitle">Вот карточки из вашего пакета:</p>
     <div id="results-cards" class="results-cards"></div>
     <div class="results-footer">
       <button class="btn-secondary" onclick="navigate('profile')">👤 Перейти в кабинет</button>
@@ -54,103 +106,102 @@
   <!-- ======= SCREEN 4: Profile ======= -->
   <div id="screen-profile" class="screen hidden has-nav">
 
-    <!-- Header -->
-    <div class="profile-header">
-      <div class="profile-avatar" id="profile-avatar">?</div>
-      <div class="profile-info">
-        <h2 class="profile-name" id="profile-name">Игрок</h2>
-        <div class="profile-coins">🪙 <span id="profile-coins-count">0</span></div>
+    <!-- Profile header -->
+    <div class="profile-hero">
+      <div class="profile-hero-avatar" id="profile-avatar">T</div>
+      <div class="profile-hero-info">
+        <h2 class="profile-hero-name" id="profile-name">Игрок</h2>
+        <div class="profile-hero-coins">🪙 <span id="profile-coins-count">0</span></div>
       </div>
-      <div class="profile-total-value-block">
-        <span class="total-value-amount" id="profile-total-value">0</span>
-        <span class="total-value-label">общая стоимость</span>
+      <div class="profile-hero-value">
+        <span class="hero-value-num" id="profile-total-value">0</span>
+        <span class="hero-value-label">общая стоимость</span>
       </div>
     </div>
 
     <!-- Daily reward -->
-    <div class="daily-reward-banner" id="daily-reward-banner">
-      <span class="daily-reward-icon">🎁</span>
-      <div class="daily-reward-text">
-        <span class="daily-reward-title">Ежедневная награда</span>
-        <span class="daily-reward-sub" id="daily-reward-sub">Проверяем...</span>
+    <div class="reward-banner" id="daily-reward-banner">
+      <span class="reward-banner-icon">🎁</span>
+      <div class="reward-banner-text">
+        <span class="reward-banner-title">Ежедневная награда</span>
+        <span class="reward-banner-sub" id="daily-reward-sub">Проверяем...</span>
       </div>
-      <button class="daily-reward-btn hidden" id="daily-reward-btn">Забрать</button>
+      <button class="reward-banner-btn hidden" id="daily-reward-btn">Забрать</button>
     </div>
 
     <!-- Stats -->
     <div class="stats-grid">
-      <div class="stat-tile">
-        <span class="stat-value" id="stat-total-cards">0</span>
-        <span class="stat-label">Карточек</span>
+      <div class="stat-card">
+        <span class="stat-val" id="stat-total-cards">0</span>
+        <span class="stat-lbl">Карточек</span>
       </div>
-      <div class="stat-tile">
-        <span class="stat-value" id="stat-rarest">—</span>
-        <span class="stat-label">Редчайшая</span>
+      <div class="stat-card">
+        <span class="stat-val" id="stat-rarest">—</span>
+        <span class="stat-lbl">Редчайшая</span>
       </div>
-      <div class="stat-tile">
-        <span class="stat-value" id="stat-best-card">—</span>
-        <span class="stat-label">Дорогая</span>
+      <div class="stat-card">
+        <span class="stat-val" id="stat-best-card">—</span>
+        <span class="stat-lbl">Дорогая</span>
       </div>
-      <div class="stat-tile">
-        <span class="stat-value" id="stat-collection-value">0</span>
-        <span class="stat-label">🪙 Стоимость</span>
+      <div class="stat-card">
+        <span class="stat-val" id="stat-collection-value">0</span>
+        <span class="stat-lbl">🪙 Стоимость</span>
       </div>
     </div>
 
-    <!-- Collection -->
-    <h3 class="section-title">Моя коллекция</h3>
+    <h3 class="section-label">Моя коллекция</h3>
     <div id="profile-collection" class="profile-collection"></div>
 
   </div>
 
   <!-- ======= SCREEN 5: Rating ======= -->
   <div id="screen-rating" class="screen hidden has-nav">
-    <div class="rating-header">
-      <h2 class="results-title">Рейтинг игроков</h2>
-      <button class="btn-icon-only" id="btn-refresh-rating" title="Обновить">↻</button>
+    <div class="rating-top">
+      <h2 class="page-title">Рейтинг</h2>
+      <button class="btn-refresh" id="btn-refresh-rating">↻</button>
     </div>
     <div id="rating-list" class="rating-list">
-      <div class="rating-loading">Загрузка...</div>
+      <div class="rating-empty">Загрузка...</div>
     </div>
   </div>
 
   <!-- ======= BOTTOM NAV ======= -->
-  <nav id="main-nav" class="main-nav">
+  <nav class="main-nav" id="main-nav">
     <button class="nav-tab active" id="nav-home" onclick="navigate('home')">
-      <span class="nav-icon">🏠</span>
-      <span class="nav-label">Паки</span>
+      <span class="nav-ico">🏠</span>
+      <span class="nav-lbl">Паки</span>
     </button>
     <button class="nav-tab" id="nav-profile" onclick="navigate('profile')">
-      <span class="nav-icon">👤</span>
-      <span class="nav-label">Профиль</span>
+      <span class="nav-ico">👤</span>
+      <span class="nav-lbl">Профиль</span>
     </button>
     <button class="nav-tab" id="nav-rating" onclick="navigate('rating')">
-      <span class="nav-icon">🏆</span>
-      <span class="nav-label">Рейтинг</span>
+      <span class="nav-ico">🏆</span>
+      <span class="nav-lbl">Рейтинг</span>
     </button>
   </nav>
 
   <!-- ======= SELL MODAL ======= -->
   <div id="sell-modal" class="modal hidden">
     <div class="modal-backdrop" id="sell-modal-backdrop"></div>
-    <div class="modal-content">
+    <div class="modal-sheet">
       <div id="sell-modal-card-area"></div>
-      <p class="sell-modal-text">Продать за <strong id="sell-modal-value">0</strong> 🪙?</p>
-      <div class="modal-actions">
+      <p class="modal-sell-text">Продать за <strong id="sell-modal-value">0</strong> 🪙?</p>
+      <div class="modal-row">
         <button class="btn-danger" id="btn-sell-confirm">Продать</button>
         <button class="btn-secondary" id="btn-sell-cancel">Отмена</button>
       </div>
     </div>
   </div>
 
-  <!-- ======= DAILY REWARD MODAL ======= -->
+  <!-- ======= REWARD MODAL ======= -->
   <div id="reward-modal" class="modal hidden">
     <div class="modal-backdrop" id="reward-modal-backdrop"></div>
-    <div class="modal-content">
+    <div class="modal-sheet">
       <h3 class="modal-title">🎁 Ежедневная награда!</h3>
-      <p class="modal-subtitle">Вы получили 3 новые карточки:</p>
+      <p class="modal-sub">Вы получили 3 новые карточки:</p>
       <div id="reward-cards-area" class="reward-cards-area"></div>
-      <button class="btn-primary" id="btn-reward-close">Забрать!</button>
+      <button class="btn-battle small" id="btn-reward-close">Забрать!</button>
     </div>
   </div>
 
