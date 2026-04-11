@@ -1,113 +1,64 @@
 // ============================================================
-// POKEMON CARD POOL
+// CONSTANTS
 // ============================================================
 
 const POKEMON_POOL = {
   common: [
-    { id: 1,   name: 'Bulbasaur'  },
-    { id: 4,   name: 'Charmander' },
-    { id: 7,   name: 'Squirtle'   },
-    { id: 10,  name: 'Caterpie'   },
-    { id: 16,  name: 'Pidgey'     },
-    { id: 19,  name: 'Rattata'    },
-    { id: 25,  name: 'Pikachu'    },
-    { id: 39,  name: 'Jigglypuff' },
-    { id: 52,  name: 'Meowth'     },
-    { id: 54,  name: 'Psyduck'    },
-    { id: 74,  name: 'Geodude'    },
-    { id: 129, name: 'Magikarp'   },
+    {id:1,name:'Bulbasaur'},{id:4,name:'Charmander'},{id:7,name:'Squirtle'},
+    {id:10,name:'Caterpie'},{id:16,name:'Pidgey'},{id:19,name:'Rattata'},
+    {id:25,name:'Pikachu'},{id:39,name:'Jigglypuff'},{id:52,name:'Meowth'},
+    {id:54,name:'Psyduck'},{id:74,name:'Geodude'},{id:129,name:'Magikarp'},
   ],
   uncommon: [
-    { id: 2,   name: 'Ivysaur'    },
-    { id: 5,   name: 'Charmeleon' },
-    { id: 8,   name: 'Wartortle'  },
-    { id: 26,  name: 'Raichu'     },
-    { id: 58,  name: 'Growlithe'  },
-    { id: 66,  name: 'Machop'     },
-    { id: 93,  name: 'Haunter'    },
-    { id: 125, name: 'Electabuzz' },
-    { id: 126, name: 'Magmar'     },
-    { id: 131, name: 'Lapras'     },
-    { id: 133, name: 'Eevee'      },
+    {id:2,name:'Ivysaur'},{id:5,name:'Charmeleon'},{id:8,name:'Wartortle'},
+    {id:26,name:'Raichu'},{id:58,name:'Growlithe'},{id:66,name:'Machop'},
+    {id:93,name:'Haunter'},{id:125,name:'Electabuzz'},{id:126,name:'Magmar'},
+    {id:131,name:'Lapras'},{id:133,name:'Eevee'},
   ],
   rare: [
-    { id: 3,   name: 'Venusaur'   },
-    { id: 6,   name: 'Charizard'  },
-    { id: 9,   name: 'Blastoise'  },
-    { id: 65,  name: 'Alakazam'   },
-    { id: 68,  name: 'Machamp'    },
-    { id: 94,  name: 'Gengar'     },
-    { id: 130, name: 'Gyarados'   },
-    { id: 149, name: 'Dragonite'  },
-    { id: 143, name: 'Snorlax'    },
-    { id: 134, name: 'Vaporeon'   },
-    { id: 136, name: 'Flareon'    },
-    { id: 135, name: 'Jolteon'    },
+    {id:3,name:'Venusaur'},{id:6,name:'Charizard'},{id:9,name:'Blastoise'},
+    {id:65,name:'Alakazam'},{id:68,name:'Machamp'},{id:94,name:'Gengar'},
+    {id:130,name:'Gyarados'},{id:149,name:'Dragonite'},{id:143,name:'Snorlax'},
+    {id:134,name:'Vaporeon'},{id:136,name:'Flareon'},{id:135,name:'Jolteon'},
   ],
   ultraRare: [
-    { id: 144, name: 'Articuno'   },
-    { id: 145, name: 'Zapdos'     },
-    { id: 146, name: 'Moltres'    },
-    { id: 151, name: 'Mew'        },
+    {id:144,name:'Articuno'},{id:145,name:'Zapdos'},{id:146,name:'Moltres'},{id:151,name:'Mew'},
   ],
   crown: [
-    { id: 150, name: 'Mewtwo'     },
+    {id:150,name:'Mewtwo'},
   ],
 };
 
-// Probability weights (must sum to 1)
-const RARITY_WEIGHTS = {
-  common:    0.50,
-  uncommon:  0.30,
-  rare:      0.15,
-  ultraRare: 0.04,
-  crown:     0.01,
-};
+const RARITY_WEIGHTS = { common:0.50, uncommon:0.30, rare:0.15, ultraRare:0.04, crown:0.01 };
+const RARITY_HP      = { common:[30,60], uncommon:[60,90], rare:[90,130], ultraRare:[130,170], crown:[200,200] };
+const RARITY_LABELS  = { common:'◆', uncommon:'◆◆', rare:'◆◆◆', ultraRare:'★', crown:'♛' };
+const RARITY_CSS     = { common:'common', uncommon:'uncommon', rare:'rare', ultraRare:'ultra-rare', crown:'crown' };
+const RARITY_ORDER   = ['crown','ultraRare','rare','uncommon','common'];
 
-// HP ranges [min, max]
-const RARITY_HP = {
-  common:    [30,  60 ],
-  uncommon:  [60,  90 ],
-  rare:      [90,  130],
-  ultraRare: [130, 170],
-  crown:     [200, 200],
-};
+const CARD_VALUES = { common:50, uncommon:200, rare:750, ultraRare:3000, crown:15000 };
 
-// Display labels
-const RARITY_LABELS = {
-  common:    '◆',
-  uncommon:  '◆◆',
-  rare:      '◆◆◆',
-  ultraRare: '★',
-  crown:     '♛',
-};
+// Storage keys
+const KEY_COLLECTION    = 'pokemon_collection_v1';
+const KEY_COINS         = 'pokemon_coins_v1';
+const KEY_LAST_REWARD   = 'pokemon_last_reward_v1';
+const KEY_USERNAME      = 'pokemon_username_v1';
+const KEY_OLD_PACK      = 'pokemon_pack_v1';
 
-// CSS data-rarity attribute values
-const RARITY_CSS = {
-  common:    'common',
-  uncommon:  'uncommon',
-  rare:      'rare',
-  ultraRare: 'ultra-rare',
-  crown:     'crown',
-};
+// Leaderboard
+const JSONBLOB_URL = 'https://jsonblob.com/api/jsonBlob/019d7b99-ed6c-728b-b65c-a6dab98ec4bb';
 
-const STORAGE_KEY = 'pokemon_pack_v1';
+const DAILY_INTERVAL_MS = 24 * 60 * 60 * 1000;
 
 // ============================================================
 // UTILITIES
 // ============================================================
 
-function randomInt(min, max) {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-}
+function randomInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
 
 function pickRarity() {
   const roll = Math.random();
-  let cumulative = 0;
-  for (const [rarity, weight] of Object.entries(RARITY_WEIGHTS)) {
-    cumulative += weight;
-    if (roll < cumulative) return rarity;
-  }
+  let cum = 0;
+  for (const [r, w] of Object.entries(RARITY_WEIGHTS)) { cum += w; if (roll < cum) return r; }
   return 'common';
 }
 
@@ -116,44 +67,160 @@ function pickFromPool(rarity) {
   return pool[Math.floor(Math.random() * pool.length)];
 }
 
-function generateHP(rarity) {
-  const [min, max] = RARITY_HP[rarity];
-  return randomInt(min, max);
-}
-
-function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
 function getSpriteUrl(id) {
   return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`;
 }
 
-// Generate 5 cards with no duplicate id+rarity combos
-function rollPack() {
+function makeUid() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+}
+
+function formatTime(ms) {
+  if (ms <= 0) return '00:00:00';
+  const h = Math.floor(ms / 3600000);
+  const m = Math.floor((ms % 3600000) / 60000);
+  const s = Math.floor((ms % 60000) / 1000);
+  return [h, m, s].map(n => String(n).padStart(2, '0')).join(':');
+}
+
+// ============================================================
+// CARD GENERATION
+// ============================================================
+
+function enrichCard(card) {
+  return {
+    ...card,
+    value:      CARD_VALUES[card.rarity] || 50,
+    rarityLabel: RARITY_LABELS[card.rarity],
+    rarityCSS:   RARITY_CSS[card.rarity],
+    obtainedAt:  card.obtainedAt || new Date().toISOString(),
+    uid:         card.uid || makeUid(),
+  };
+}
+
+function rollMiniPack(count) {
   const cards = [];
-  const usedKeys = new Set();
+  const used = new Set();
   let attempts = 0;
-
-  while (cards.length < 5 && attempts < 100) {
+  while (cards.length < count && attempts < 200) {
     attempts++;
-    const rarity = pickRarity();
+    const rarity  = pickRarity();
     const pokemon = pickFromPool(rarity);
-    const key = `${rarity}-${pokemon.id}`;
-
-    if (!usedKeys.has(key) || POKEMON_POOL[rarity].length === 1) {
-      usedKeys.add(key);
-      cards.push({
-        id:          pokemon.id,
-        name:        pokemon.name,
+    const key     = `${rarity}-${pokemon.id}`;
+    if (!used.has(key) || POKEMON_POOL[rarity].length === 1) {
+      used.add(key);
+      cards.push(enrichCard({
+        id:    pokemon.id,
+        name:  pokemon.name,
         rarity,
-        hp:          generateHP(rarity),
-        rarityLabel: RARITY_LABELS[rarity],
-        rarityCSS:   RARITY_CSS[rarity],
-      });
+        hp:    randomInt(...RARITY_HP[rarity]),
+      }));
     }
   }
   return cards;
+}
+
+// ============================================================
+// STORAGE
+// ============================================================
+
+function getCollection() {
+  try { return JSON.parse(localStorage.getItem(KEY_COLLECTION)) || []; } catch { return []; }
+}
+function saveCollection(arr) {
+  try { localStorage.setItem(KEY_COLLECTION, JSON.stringify(arr)); } catch {}
+}
+function addToCollection(cards) {
+  const col = getCollection();
+  col.push(...cards);
+  saveCollection(col);
+}
+
+function getCoins() {
+  return parseInt(localStorage.getItem(KEY_COINS) || '0', 10);
+}
+function addCoins(amount) {
+  localStorage.setItem(KEY_COINS, String(getCoins() + amount));
+}
+
+function getUsername() {
+  return localStorage.getItem(KEY_USERNAME) || 'Игрок';
+}
+function setUsername(name) {
+  localStorage.setItem(KEY_USERNAME, name);
+}
+
+function canClaimReward() {
+  const last = localStorage.getItem(KEY_LAST_REWARD);
+  if (!last) return true;
+  return Date.now() - new Date(last).getTime() > DAILY_INTERVAL_MS;
+}
+function markRewardClaimed() {
+  localStorage.setItem(KEY_LAST_REWARD, new Date().toISOString());
+}
+function msUntilNextReward() {
+  const last = localStorage.getItem(KEY_LAST_REWARD);
+  if (!last) return 0;
+  const elapsed = Date.now() - new Date(last).getTime();
+  return Math.max(0, DAILY_INTERVAL_MS - elapsed);
+}
+
+// Migrate old pack data to new collection format
+function migrateOldData() {
+  const raw = localStorage.getItem(KEY_OLD_PACK);
+  if (!raw) return;
+  if (getCollection().length > 0) return; // already migrated
+  try {
+    const old = JSON.parse(raw);
+    if (Array.isArray(old) && old.length > 0) {
+      saveCollection(old.map(enrichCard));
+    }
+  } catch {}
+}
+
+// ============================================================
+// LEADERBOARD
+// ============================================================
+
+async function submitScore(name, score, cards) {
+  try {
+    const res = await fetch(JSONBLOB_URL);
+    if (!res.ok) return;
+    const data = await res.json();
+    const players = Array.isArray(data.players) ? data.players : [];
+
+    const idx = players.findIndex(p => p.name === name);
+    const entry = { name, score, cards, updatedAt: new Date().toISOString() };
+    if (idx >= 0) players[idx] = entry;
+    else players.push(entry);
+
+    await fetch(JSONBLOB_URL, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ players }),
+    });
+  } catch {}
+}
+
+async function fetchLeaderboard() {
+  const res = await fetch(JSONBLOB_URL);
+  const data = await res.json();
+  const players = Array.isArray(data.players) ? data.players : [];
+  return players.sort((a, b) => b.score - a.score).slice(0, 10);
+}
+
+// ============================================================
+// IMAGE PRE-FETCH
+// ============================================================
+
+async function prefetchImages(cards) {
+  await Promise.all(cards.map(c => new Promise(r => {
+    const img = new Image();
+    img.onload = img.onerror = r;
+    img.src = getSpriteUrl(c.id);
+  })));
 }
 
 // ============================================================
@@ -167,44 +234,44 @@ function buildCardElement(card, isFlipped = false) {
   const inner = document.createElement('div');
   inner.className = 'card-inner' + (isFlipped ? ' flipped' : '');
 
-  // Back face
   const back = document.createElement('div');
   back.className = 'card-face card-back';
-  const backLogo = document.createElement('span');
-  backLogo.className = 'card-back-logo';
-  backLogo.textContent = '⬟';
-  back.appendChild(backLogo);
+  const logo = document.createElement('span');
+  logo.className = 'card-back-logo';
+  logo.textContent = '⬟';
+  back.appendChild(logo);
 
-  // Front face
   const front = document.createElement('div');
   front.className = 'card-face card-front';
   front.dataset.rarity = card.rarityCSS;
-
   front.innerHTML = `
     <div class="card-header">
       <span class="card-pokemon-name">${card.name}</span>
       <span class="card-hp">${card.hp}&nbsp;HP</span>
     </div>
     <div class="card-image-area">
-      <img
-        class="card-pokemon-image"
-        src="${getSpriteUrl(card.id)}"
-        alt="${card.name}"
-        draggable="false"
-        onerror="this.style.opacity='0.3'"
-      />
+      <img class="card-pokemon-image" src="${getSpriteUrl(card.id)}" alt="${card.name}" draggable="false" onerror="this.style.opacity='0.3'"/>
     </div>
     <div class="card-footer">
-      <div class="card-rarity-indicator" data-rarity="${card.rarityCSS}">
-        ${card.rarityLabel}
-      </div>
-    </div>
-  `;
+      <div class="card-rarity-indicator" data-rarity="${card.rarityCSS}">${card.rarityLabel}</div>
+    </div>`;
 
   inner.appendChild(back);
   inner.appendChild(front);
   wrapper.appendChild(inner);
   return wrapper;
+}
+
+function buildProfileCardItem(card, onClick) {
+  const item = document.createElement('div');
+  item.className = 'profile-card-item';
+  item.appendChild(buildCardElement(card, true));
+  const badge = document.createElement('div');
+  badge.className = 'card-value-badge';
+  badge.textContent = `🪙 ${card.value.toLocaleString()}`;
+  item.appendChild(badge);
+  item.addEventListener('click', () => onClick(card));
+  return item;
 }
 
 // ============================================================
@@ -213,28 +280,28 @@ function buildCardElement(card, isFlipped = false) {
 
 function initStarfield() {
   const canvas = document.getElementById('starfield');
-  const ctx = canvas.getContext('2d');
-  let stars = [];
+  const ctx    = canvas.getContext('2d');
+  let stars    = [];
 
   function resize() {
     canvas.width  = window.innerWidth;
     canvas.height = window.innerHeight;
-    stars = Array.from({ length: 120 }, () => ({
-      x:     Math.random() * canvas.width,
-      y:     Math.random() * canvas.height,
-      r:     Math.random() * 1.4 + 0.2,
+    stars = Array.from({length:120}, () => ({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      r: Math.random() * 1.4 + 0.2,
       speed: Math.random() * 0.4 + 0.05,
       phase: Math.random() * Math.PI * 2,
     }));
   }
 
-  function draw(timestamp) {
+  function draw(ts) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    stars.forEach(star => {
-      const alpha = 0.25 + 0.75 * Math.abs(Math.sin(timestamp * star.speed * 0.001 + star.phase));
+    stars.forEach(s => {
+      const a = 0.25 + 0.75 * Math.abs(Math.sin(ts * s.speed * 0.001 + s.phase));
       ctx.beginPath();
-      ctx.arc(star.x, star.y, star.r, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(255,255,255,${alpha.toFixed(3)})`;
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255,255,255,${a.toFixed(3)})`;
       ctx.fill();
     });
     requestAnimationFrame(draw);
@@ -251,97 +318,117 @@ function initStarfield() {
 
 function initTelegram() {
   if (typeof Telegram === 'undefined' || !Telegram.WebApp) return;
-
   const tg = Telegram.WebApp;
   tg.ready();
   tg.expand();
+  const t = tg.themeParams || {};
+  const r = document.documentElement.style;
+  if (t.bg_color)          r.setProperty('--tg-bg-color',          t.bg_color);
+  if (t.text_color)        r.setProperty('--tg-text-color',        t.text_color);
+  if (t.hint_color)        r.setProperty('--tg-hint-color',        t.hint_color);
+  if (t.button_color)      r.setProperty('--tg-button-color',      t.button_color);
+  if (t.button_text_color) r.setProperty('--tg-button-text-color', t.button_text_color);
 
-  const theme = tg.themeParams || {};
-  const root = document.documentElement.style;
-  if (theme.bg_color)          root.setProperty('--tg-bg-color',          theme.bg_color);
-  if (theme.text_color)        root.setProperty('--tg-text-color',        theme.text_color);
-  if (theme.hint_color)        root.setProperty('--tg-hint-color',        theme.hint_color);
-  if (theme.button_color)      root.setProperty('--tg-button-color',      theme.button_color);
-  if (theme.button_text_color) root.setProperty('--tg-button-text-color', theme.button_text_color);
+  // Get username from Telegram
+  try {
+    const user = tg.initDataUnsafe?.user;
+    if (user) {
+      const name = [user.first_name, user.last_name].filter(Boolean).join(' ') || user.username || 'Игрок';
+      setUsername(name);
+    }
+  } catch {}
 }
 
 function haptic(type) {
-  try {
-    if (typeof Telegram !== 'undefined' && Telegram.WebApp?.HapticFeedback) {
-      Telegram.WebApp.HapticFeedback.impactOccurred(type);
-    }
-  } catch (_) {}
+  try { if (typeof Telegram !== 'undefined') Telegram.WebApp?.HapticFeedback?.impactOccurred(type); } catch {}
 }
 
 // ============================================================
-// SCREEN MANAGEMENT
+// NAVIGATION
 // ============================================================
 
-function showScreen(id) {
+let currentScreen = 'welcome';
+
+function showScreen(id, navTab) {
   document.querySelectorAll('.screen').forEach(el => {
     el.classList.remove('active');
     el.classList.add('hidden');
   });
-  const target = document.getElementById(id);
+  const target = document.getElementById(`screen-${id}`);
   target.classList.remove('hidden');
-  void target.offsetWidth; // reflow for CSS transition
+  void target.offsetWidth;
   target.classList.add('active');
+  currentScreen = id;
+
+  // Hide nav during pack animation
+  const nav = document.getElementById('main-nav');
+  if (id === 'pack') {
+    nav.style.display = 'none';
+  } else {
+    nav.style.display = '';
+  }
+
+  // Update nav active tab
+  if (navTab) {
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    const tab = document.getElementById(`nav-${navTab}`);
+    if (tab) tab.classList.add('active');
+  }
 }
 
 function showLoading(show) {
   document.getElementById('loading-overlay').classList.toggle('hidden', !show);
 }
 
-// ============================================================
-// IMAGE PRE-FETCH
-// ============================================================
-
-async function prefetchImages(cards) {
-  await Promise.all(cards.map(card => new Promise(resolve => {
-    const img = new Image();
-    img.onload  = resolve;
-    img.onerror = resolve;
-    img.src     = getSpriteUrl(card.id);
-  })));
-}
+// Global nav function (called from HTML onclick)
+window.navigate = function(dest) {
+  if (dest === 'home') {
+    showScreen('welcome', 'home');
+  } else if (dest === 'profile') {
+    renderProfileScreen();
+    showScreen('profile', 'profile');
+    submitCurrentScore(); // async, fire and forget
+  } else if (dest === 'rating') {
+    showScreen('rating', 'rating');
+    loadRatingScreen();
+  }
+};
 
 // ============================================================
 // PACK OPENING SEQUENCE
 // ============================================================
 
-async function runPackOpeningSequence(cards) {
-  showScreen('screen-pack');
+async function runPackOpeningSequence(cards, onDone) {
+  showScreen('pack');
 
-  const packVisual    = document.getElementById('pack-visual');
-  const packInstr     = document.getElementById('pack-instruction');
-  const revealArea    = document.getElementById('cards-reveal-area');
+  const packVisual  = document.getElementById('pack-visual');
+  const packInstr   = document.getElementById('pack-instruction');
+  const revealArea  = document.getElementById('cards-reveal-area');
 
-  // Wait for user to tap the pack
+  // Reset pack state
+  packVisual.classList.remove('shaking', 'bursting');
+  packVisual.style.display = '';
+  revealArea.classList.add('hidden');
+  revealArea.innerHTML = '';
+
   await new Promise(resolve => {
     packVisual.addEventListener('click', resolve, { once: true });
   });
 
   haptic('medium');
-
-  // Phase A: Shake
   packInstr.textContent = '';
   packVisual.classList.add('shaking');
   await sleep(860);
 
-  // Phase B: Burst
   packVisual.classList.remove('shaking');
   packVisual.classList.add('bursting');
   await sleep(500);
   packVisual.style.display = 'none';
-
-  // Show reveal area
   revealArea.classList.remove('hidden');
 
-  // Phase C: Reveal each card one by one
   for (let i = 0; i < cards.length; i++) {
     const card = cards[i];
 
-    // Spotlight for ultra rare / crown
     if (card.rarity === 'ultraRare' || card.rarity === 'crown') {
       const overlay = document.createElement('div');
       overlay.className = 'spotlight-overlay ' + (card.rarity === 'crown' ? 'crown' : 'ultra');
@@ -350,125 +437,289 @@ async function runPackOpeningSequence(cards) {
     }
 
     revealArea.innerHTML = '';
-
     const cardEl = buildCardElement(card, false);
     cardEl.classList.add('entering');
     revealArea.appendChild(cardEl);
-
-    // Wait for entrance animation
     await sleep(500);
 
-    // Flip to front
-    const inner = cardEl.querySelector('.card-inner');
-    inner.classList.add('flipped');
+    cardEl.querySelector('.card-inner').classList.add('flipped');
 
-    // Haptic by rarity
-    const hapticType = {
-      common:    'light',
-      uncommon:  'light',
-      rare:      'medium',
-      ultraRare: 'heavy',
-      crown:     'heavy',
-    }[card.rarity] || 'light';
+    const hapticType = { common:'light', uncommon:'light', rare:'medium', ultraRare:'heavy', crown:'heavy' }[card.rarity] || 'light';
     haptic(hapticType);
 
-    // Pause so player can see the card
-    const pause = card.rarity === 'crown'     ? 2600
-                : card.rarity === 'ultraRare' ? 2100
-                : card.rarity === 'rare'      ? 1600
-                : 1200;
-
+    const pause = card.rarity === 'crown' ? 2600 : card.rarity === 'ultraRare' ? 2100 : card.rarity === 'rare' ? 1600 : 1200;
     await sleep(pause);
   }
 
   await sleep(300);
-  showResultsScreen(cards);
+  if (onDone) onDone(cards);
 }
-
-// ============================================================
-// RESULTS SCREEN
-// ============================================================
 
 function showResultsScreen(cards) {
   const container = document.getElementById('results-cards');
   container.innerHTML = '';
-
-  cards.forEach((card, index) => {
-    const cardEl = buildCardElement(card, true);
-    cardEl.style.animationDelay = `${index * 100}ms`;
-    cardEl.classList.add('entering');
-    container.appendChild(cardEl);
+  cards.forEach((card, i) => {
+    const el = buildCardElement(card, true);
+    el.style.animationDelay = `${i * 100}ms`;
+    el.classList.add('entering');
+    container.appendChild(el);
   });
-
-  showScreen('screen-results');
+  showScreen('results', 'home');
 }
 
 // ============================================================
-// PERSISTENCE
+// PROFILE SCREEN
 // ============================================================
 
-function savePackResult(cards) {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(cards));
-  } catch (_) {}
+let rewardTimerInterval = null;
+
+function renderProfileScreen() {
+  const name       = getUsername();
+  const collection = getCollection();
+  const coins      = getCoins();
+  const totalValue = collection.reduce((s, c) => s + (c.value || 0), 0);
+
+  // Header
+  document.getElementById('profile-name').textContent = name;
+  document.getElementById('profile-avatar').textContent = name.charAt(0).toUpperCase();
+  document.getElementById('profile-coins-count').textContent = coins.toLocaleString();
+  document.getElementById('profile-total-value').textContent = totalValue.toLocaleString();
+
+  // Stats
+  document.getElementById('stat-total-cards').textContent = collection.length;
+  document.getElementById('stat-collection-value').textContent = totalValue.toLocaleString();
+
+  // Rarest card
+  const rarest = RARITY_ORDER.find(r => collection.some(c => c.rarity === r));
+  if (rarest) {
+    const rarestCard = collection.find(c => c.rarity === rarest);
+    document.getElementById('stat-rarest').textContent = rarestCard.name;
+  }
+
+  // Most valuable card
+  if (collection.length > 0) {
+    const best = collection.reduce((a, b) => (b.value > a.value ? b : a));
+    document.getElementById('stat-best-card').textContent = best.name;
+  }
+
+  // Daily reward
+  updateDailyRewardUI();
+  if (rewardTimerInterval) clearInterval(rewardTimerInterval);
+  rewardTimerInterval = setInterval(updateDailyRewardUI, 1000);
+
+  // Collection grid
+  const grid  = document.getElementById('profile-collection');
+  const empty = document.getElementById('profile-empty');
+  grid.innerHTML = '';
+
+  if (collection.length === 0) {
+    grid.appendChild(empty);
+    empty.classList.remove('hidden');
+  } else {
+    empty.classList.add('hidden');
+    // Sort: Crown first, then Ultra Rare, etc.
+    const sorted = [...collection].sort((a, b) =>
+      RARITY_ORDER.indexOf(a.rarity) - RARITY_ORDER.indexOf(b.rarity)
+    );
+    sorted.forEach(card => {
+      grid.appendChild(buildProfileCardItem(card, openSellModal));
+    });
+  }
 }
 
-function loadPackResult() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed) || parsed.length !== 5) return null;
-    // Validate each card has required fields
-    if (!parsed.every(c => c.id && c.name && c.rarity)) return null;
-    return parsed;
-  } catch (_) {
-    return null;
+function updateDailyRewardUI() {
+  const btn = document.getElementById('daily-reward-btn');
+  const sub = document.getElementById('daily-reward-sub');
+
+  if (canClaimReward()) {
+    btn.classList.remove('hidden');
+    sub.textContent = 'Доступна!';
+    if (rewardTimerInterval) { clearInterval(rewardTimerInterval); rewardTimerInterval = null; }
+  } else {
+    btn.classList.add('hidden');
+    sub.textContent = 'Следующая через ' + formatTime(msUntilNextReward());
   }
 }
 
 // ============================================================
-// MAIN BOOTSTRAP
+// DAILY REWARD MODAL
+// ============================================================
+
+async function claimDailyReward() {
+  const cards = rollMiniPack(3);
+  await prefetchImages(cards);
+  addToCollection(cards);
+  markRewardClaimed();
+  updateDailyRewardUI();
+  renderProfileScreen();
+  showRewardModal(cards);
+}
+
+function showRewardModal(cards) {
+  const modal = document.getElementById('reward-modal');
+  const area  = document.getElementById('reward-cards-area');
+  modal.classList.remove('hidden');
+  area.innerHTML = '';
+
+  cards.forEach((card, i) => {
+    const el = buildCardElement(card, false);
+    el.style.animationDelay = `${i * 200}ms`;
+    el.classList.add('entering');
+    area.appendChild(el);
+
+    setTimeout(() => {
+      el.querySelector('.card-inner').classList.add('flipped');
+    }, i * 300 + 400);
+  });
+}
+
+function closeRewardModal() {
+  document.getElementById('reward-modal').classList.add('hidden');
+}
+
+// ============================================================
+// SELL MODAL
+// ============================================================
+
+let sellTargetUid = null;
+
+function openSellModal(card) {
+  sellTargetUid = card.uid;
+  const modal = document.getElementById('sell-modal');
+  const area  = document.getElementById('sell-modal-card-area');
+
+  area.innerHTML = '';
+  const el = buildCardElement(card, true);
+  // Scale the card smaller inside modal
+  el.style.cssText = '--card-width:130px;--card-height:182px';
+  el.querySelector('.card-wrapper').style.width  = '130px';
+  el.querySelector('.card-wrapper').style.height = '182px';
+  area.appendChild(el);
+
+  document.getElementById('sell-modal-value').textContent = card.value.toLocaleString();
+  modal.classList.remove('hidden');
+}
+
+function closeSellModal() {
+  document.getElementById('sell-modal').classList.add('hidden');
+  sellTargetUid = null;
+}
+
+function confirmSell() {
+  if (!sellTargetUid) return;
+  const col = getCollection();
+  const idx = col.findIndex(c => c.uid === sellTargetUid);
+  if (idx === -1) { closeSellModal(); return; }
+
+  const card = col[idx];
+  col.splice(idx, 1);
+  saveCollection(col);
+  addCoins(card.value);
+  haptic('medium');
+  closeSellModal();
+  renderProfileScreen(); // refresh
+  submitCurrentScore();
+}
+
+// ============================================================
+// RATING SCREEN
+// ============================================================
+
+async function loadRatingScreen() {
+  const list = document.getElementById('rating-list');
+  list.innerHTML = '<div class="rating-loading">Загрузка...</div>';
+
+  try {
+    const players = await fetchLeaderboard();
+    const myName  = getUsername();
+    list.innerHTML = '';
+
+    if (players.length === 0) {
+      list.innerHTML = '<div class="rating-loading">Пока нет игроков. Будь первым!</div>';
+      return;
+    }
+
+    const medals = ['🥇', '🥈', '🥉'];
+    players.forEach((p, i) => {
+      const row  = document.createElement('div');
+      const isMe = p.name === myName;
+      row.className = 'rating-row' + (isMe ? ' is-me' : '');
+      row.innerHTML = `
+        <span class="rating-rank">${medals[i] || (i + 1)}</span>
+        <div class="rating-info">
+          <div class="rating-name">${p.name}${isMe ? ' (Вы)' : ''}</div>
+          <div class="rating-meta">${p.cards} карточек</div>
+        </div>
+        <span class="rating-score">🪙 ${(p.score || 0).toLocaleString()}</span>`;
+      list.appendChild(row);
+    });
+  } catch {
+    list.innerHTML = '<div class="rating-loading">Ошибка загрузки. Попробуйте позже.</div>';
+  }
+}
+
+async function submitCurrentScore() {
+  const col   = getCollection();
+  if (col.length === 0) return;
+  const name  = getUsername();
+  const score = col.reduce((s, c) => s + (c.value || 0), 0);
+  await submitScore(name, score, col.length);
+}
+
+// ============================================================
+// MAIN
 // ============================================================
 
 async function main() {
   initTelegram();
   initStarfield();
+  migrateOldData();
 
-  const existingCards = loadPackResult();
+  // Wire up daily reward button
+  document.getElementById('daily-reward-btn').addEventListener('click', claimDailyReward);
 
-  if (existingCards) {
-    // Already opened — show welcome briefly, then jump to results
+  // Wire up reward modal close
+  document.getElementById('btn-reward-close').addEventListener('click', closeRewardModal);
+  document.getElementById('reward-modal-backdrop').addEventListener('click', closeRewardModal);
+
+  // Wire up sell modal
+  document.getElementById('btn-sell-confirm').addEventListener('click', confirmSell);
+  document.getElementById('btn-sell-cancel').addEventListener('click', closeSellModal);
+  document.getElementById('sell-modal-backdrop').addEventListener('click', closeSellModal);
+
+  // Wire up rating refresh
+  document.getElementById('btn-refresh-rating').addEventListener('click', loadRatingScreen);
+
+  const collection = getCollection();
+  const alreadyOpened = collection.length > 0;
+
+  if (alreadyOpened) {
     document.getElementById('already-opened-msg').classList.remove('hidden');
     document.getElementById('btn-open-pack').disabled = true;
-    await sleep(600);
-    showResultsScreen(existingCards);
-    return;
   }
 
-  // Fresh user
-  showScreen('screen-welcome');
+  showScreen('welcome', 'home');
 
   document.getElementById('btn-open-pack').addEventListener('click', async () => {
     const btn = document.getElementById('btn-open-pack');
     btn.disabled = true;
 
     showLoading(true);
-
-    const cards = rollPack();
-
-    // Pre-fetch sprites in parallel before starting animation
+    const cards = rollMiniPack(5);
     await prefetchImages(cards);
     showLoading(false);
 
-    // Save before animation (in case user closes mid-flow)
-    savePackResult(cards);
+    addToCollection(cards);
 
-    await runPackOpeningSequence(cards);
+    document.getElementById('already-opened-msg').classList.remove('hidden');
+
+    await runPackOpeningSequence(cards, showResultsScreen);
+
+    submitCurrentScore();
   });
 }
 
 main().catch(err => {
-  console.error('Pokemon app crashed:', err);
+  console.error('App error:', err);
   showLoading(false);
 });

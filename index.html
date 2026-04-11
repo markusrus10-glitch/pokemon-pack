@@ -8,11 +8,10 @@
 </head>
 <body>
 
-  <!-- Starfield canvas sits behind everything -->
   <canvas id="starfield"></canvas>
 
-  <!-- SCREEN 1: Welcome -->
-  <div id="screen-welcome" class="screen active">
+  <!-- ======= SCREEN 1: Welcome ======= -->
+  <div id="screen-welcome" class="screen active has-nav">
     <div class="logo-area">
       <div class="pokeball-icon"></div>
       <h1 class="game-title">Покемон<br>Паки</h1>
@@ -22,13 +21,11 @@
       <button id="btn-open-pack" class="btn-primary">
         <span class="btn-icon">✦</span> Открыть пакет
       </button>
-      <p id="already-opened-msg" class="already-msg hidden">
-        Вы уже открыли пакет!
-      </p>
+      <p id="already-opened-msg" class="already-msg hidden">Пакет уже открыт — ждите ежедневную награду!</p>
     </div>
   </div>
 
-  <!-- SCREEN 2: Pack Animation -->
+  <!-- ======= SCREEN 2: Pack Animation ======= -->
   <div id="screen-pack" class="screen hidden">
     <div class="pack-container">
       <div id="pack-visual" class="pack-visual">
@@ -44,17 +41,122 @@
     <div id="cards-reveal-area" class="cards-reveal-area hidden"></div>
   </div>
 
-  <!-- SCREEN 3: Results -->
-  <div id="screen-results" class="screen hidden">
+  <!-- ======= SCREEN 3: Results ======= -->
+  <div id="screen-results" class="screen hidden has-nav">
     <h2 class="results-title">Ваша коллекция!</h2>
     <p class="results-subtitle">Вот карточки из вашего пакета:</p>
     <div id="results-cards" class="results-cards"></div>
     <div class="results-footer">
-      <p class="results-note">Пакет уже был открыт. Возвращайтесь!</p>
+      <button class="btn-secondary" onclick="navigate('profile')">👤 Перейти в кабинет</button>
     </div>
   </div>
 
-  <!-- Loading overlay -->
+  <!-- ======= SCREEN 4: Profile ======= -->
+  <div id="screen-profile" class="screen hidden has-nav">
+
+    <!-- Header -->
+    <div class="profile-header">
+      <div class="profile-avatar" id="profile-avatar">?</div>
+      <div class="profile-info">
+        <h2 class="profile-name" id="profile-name">Игрок</h2>
+        <div class="profile-coins">🪙 <span id="profile-coins-count">0</span></div>
+      </div>
+      <div class="profile-total-value-block">
+        <span class="total-value-amount" id="profile-total-value">0</span>
+        <span class="total-value-label">общая стоимость</span>
+      </div>
+    </div>
+
+    <!-- Daily reward -->
+    <div class="daily-reward-banner" id="daily-reward-banner">
+      <span class="daily-reward-icon">🎁</span>
+      <div class="daily-reward-text">
+        <span class="daily-reward-title">Ежедневная награда</span>
+        <span class="daily-reward-sub" id="daily-reward-sub">Проверяем...</span>
+      </div>
+      <button class="daily-reward-btn hidden" id="daily-reward-btn">Забрать</button>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-grid">
+      <div class="stat-tile">
+        <span class="stat-value" id="stat-total-cards">0</span>
+        <span class="stat-label">Карточек</span>
+      </div>
+      <div class="stat-tile">
+        <span class="stat-value" id="stat-rarest">—</span>
+        <span class="stat-label">Редчайшая</span>
+      </div>
+      <div class="stat-tile">
+        <span class="stat-value" id="stat-best-card">—</span>
+        <span class="stat-label">Дорогая</span>
+      </div>
+      <div class="stat-tile">
+        <span class="stat-value" id="stat-collection-value">0</span>
+        <span class="stat-label">🪙 Стоимость</span>
+      </div>
+    </div>
+
+    <!-- Collection -->
+    <h3 class="section-title">Моя коллекция</h3>
+    <div id="profile-collection" class="profile-collection">
+      <p class="empty-state" id="profile-empty">Пока нет карточек.<br>Открой первый пакет!</p>
+    </div>
+
+  </div>
+
+  <!-- ======= SCREEN 5: Rating ======= -->
+  <div id="screen-rating" class="screen hidden has-nav">
+    <div class="rating-header">
+      <h2 class="results-title">Рейтинг игроков</h2>
+      <button class="btn-icon-only" id="btn-refresh-rating" title="Обновить">↻</button>
+    </div>
+    <div id="rating-list" class="rating-list">
+      <div class="rating-loading">Загрузка...</div>
+    </div>
+  </div>
+
+  <!-- ======= BOTTOM NAV ======= -->
+  <nav id="main-nav" class="main-nav">
+    <button class="nav-tab active" id="nav-home" onclick="navigate('home')">
+      <span class="nav-icon">🏠</span>
+      <span class="nav-label">Паки</span>
+    </button>
+    <button class="nav-tab" id="nav-profile" onclick="navigate('profile')">
+      <span class="nav-icon">👤</span>
+      <span class="nav-label">Профиль</span>
+    </button>
+    <button class="nav-tab" id="nav-rating" onclick="navigate('rating')">
+      <span class="nav-icon">🏆</span>
+      <span class="nav-label">Рейтинг</span>
+    </button>
+  </nav>
+
+  <!-- ======= SELL MODAL ======= -->
+  <div id="sell-modal" class="modal hidden">
+    <div class="modal-backdrop" id="sell-modal-backdrop"></div>
+    <div class="modal-content">
+      <div id="sell-modal-card-area"></div>
+      <p class="sell-modal-text">Продать за <strong id="sell-modal-value">0</strong> 🪙?</p>
+      <div class="modal-actions">
+        <button class="btn-danger" id="btn-sell-confirm">Продать</button>
+        <button class="btn-secondary" id="btn-sell-cancel">Отмена</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======= DAILY REWARD MODAL ======= -->
+  <div id="reward-modal" class="modal hidden">
+    <div class="modal-backdrop" id="reward-modal-backdrop"></div>
+    <div class="modal-content">
+      <h3 class="modal-title">🎁 Ежедневная награда!</h3>
+      <p class="modal-subtitle">Вы получили 3 новые карточки:</p>
+      <div id="reward-cards-area" class="reward-cards-area"></div>
+      <button class="btn-primary" id="btn-reward-close">Забрать!</button>
+    </div>
+  </div>
+
+  <!-- ======= LOADING ======= -->
   <div id="loading-overlay" class="loading-overlay hidden">
     <div class="pokeball-spinner"></div>
     <p>Загрузка...</p>
