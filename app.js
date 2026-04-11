@@ -508,16 +508,15 @@ function renderProfileScreen() {
   rewardTimerInterval = setInterval(updateDailyRewardUI, 1000);
 
   // Collection grid
-  const grid  = document.getElementById('profile-collection');
-  const empty = document.getElementById('profile-empty');
+  const grid = document.getElementById('profile-collection');
   grid.innerHTML = '';
 
   if (collection.length === 0) {
+    const empty = document.createElement('p');
+    empty.className = 'empty-state';
+    empty.innerHTML = 'Пока нет карточек.<br>Открой первый пакет!';
     grid.appendChild(empty);
-    empty.classList.remove('hidden');
   } else {
-    empty.classList.add('hidden');
-    // Sort: Crown first, then Ultra Rare, etc.
     const sorted = [...collection].sort((a, b) =>
       RARITY_ORDER.indexOf(a.rarity) - RARITY_ORDER.indexOf(b.rarity)
     );
