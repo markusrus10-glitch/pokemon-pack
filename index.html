@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Pokemon Pack Opening</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- Starfield canvas sits behind everything -->
+  <canvas id="starfield"></canvas>
+
+  <!-- SCREEN 1: Welcome -->
+  <div id="screen-welcome" class="screen active">
+    <div class="logo-area">
+      <div class="pokeball-icon"></div>
+      <h1 class="game-title">Покемон<br>Паки</h1>
+      <p class="subtitle">Открой пакет и узнай, какие карточки тебе достались!</p>
+    </div>
+    <div class="welcome-actions">
+      <button id="btn-open-pack" class="btn-primary">
+        <span class="btn-icon">✦</span> Открыть пакет
+      </button>
+      <p id="already-opened-msg" class="already-msg hidden">
+        Вы уже открыли пакет!
+      </p>
+    </div>
+  </div>
+
+  <!-- SCREEN 2: Pack Animation -->
+  <div id="screen-pack" class="screen hidden">
+    <div class="pack-container">
+      <div id="pack-visual" class="pack-visual">
+        <div class="pack-shine"></div>
+        <div class="pack-pokeball"></div>
+        <div class="pack-label">
+          <span class="pack-edition">Kanto Edition</span>
+          <span class="pack-count">5 карточек</span>
+        </div>
+      </div>
+      <p id="pack-instruction" class="pack-instruction">Нажмите на пакет, чтобы открыть!</p>
+    </div>
+    <div id="cards-reveal-area" class="cards-reveal-area hidden"></div>
+  </div>
+
+  <!-- SCREEN 3: Results -->
+  <div id="screen-results" class="screen hidden">
+    <h2 class="results-title">Ваша коллекция!</h2>
+    <p class="results-subtitle">Вот карточки из вашего пакета:</p>
+    <div id="results-cards" class="results-cards"></div>
+    <div class="results-footer">
+      <p class="results-note">Пакет уже был открыт. Возвращайтесь!</p>
+    </div>
+  </div>
+
+  <!-- Loading overlay -->
+  <div id="loading-overlay" class="loading-overlay hidden">
+    <div class="pokeball-spinner"></div>
+    <p>Загрузка...</p>
+  </div>
+
+  <script src="https://telegram.org/js/telegram-web-app.js" defer></script>
+  <script src="app.js" defer></script>
+</body>
+</html>
