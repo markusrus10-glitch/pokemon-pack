@@ -382,16 +382,16 @@ html, body {
 /* Slot that holds the current card during swipe */
 .card-slot {
   position: relative;
-  width: 92vw;
-  height: 82vh;
+  width: 85vw;
+  height: 76vh;
   display: flex; align-items: center; justify-content: center;
 }
 .card-slot .card-wrapper {
   position: absolute;
-  width: 92vw;
-  height: 82vh;
-  --card-w: 92vw;
-  --card-h: 82vh;
+  width: 85vw;
+  height: 76vh;
+  --card-w: 85vw;
+  --card-h: 76vh;
   cursor: grab;
   will-change: transform;
   touch-action: none;
