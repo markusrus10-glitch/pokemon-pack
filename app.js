@@ -41,6 +41,7 @@ const CARD_VALUES = { common:50, uncommon:200, rare:750, ultraRare:3000, crown:1
 const KEY_COLLECTION    = 'pokemon_collection_v1';
 const KEY_COINS         = 'pokemon_coins_v1';
 const KEY_LAST_REWARD   = 'pokemon_last_reward_v1';
+const KEY_LAST_PACK     = 'pokemon_last_pack_v1';
 const KEY_USERNAME      = 'pokemon_username_v1';
 const KEY_AVATAR        = 'pokemon_avatar_v1';
 const KEY_OLD_PACK      = 'pokemon_pack_v1';
@@ -164,8 +165,22 @@ function markRewardClaimed() {
 function msUntilNextReward() {
   const last = localStorage.getItem(KEY_LAST_REWARD);
   if (!last) return 0;
-  const elapsed = Date.now() - new Date(last).getTime();
-  return Math.max(0, DAILY_INTERVAL_MS - elapsed);
+  return Math.max(0, DAILY_INTERVAL_MS - (Date.now() - new Date(last).getTime()));
+}
+
+// Main pack — once per 24h
+function canOpenPack() {
+  const last = localStorage.getItem(KEY_LAST_PACK);
+  if (!last) return true;
+  return Date.now() - new Date(last).getTime() > DAILY_INTERVAL_MS;
+}
+function markPackOpened() {
+  localStorage.setItem(KEY_LAST_PACK, new Date().toISOString());
+}
+function msUntilNextPack() {
+  const last = localStorage.getItem(KEY_LAST_PACK);
+  if (!last) return 0;
+  return Math.max(0, DAILY_INTERVAL_MS - (Date.now() - new Date(last).getTime()));
 }
 
 // Migrate old pack data to new collection format
@@ -627,17 +642,17 @@ function renderHomeScreen() {
 function updateHomePackTimer() {
   const sub   = document.getElementById('home-pack-sub');
   const timer = document.getElementById('home-pack-timer');
+  const btn   = document.getElementById('btn-open-pack');
   if (!sub || !timer) return;
 
-  if (canClaimReward() && getCollection().length > 0) {
-    sub.textContent   = 'Ежедневная награда';
-    timer.textContent = 'Доступна!';
-  } else if (getCollection().length === 0) {
-    sub.textContent   = 'Первый пак';
-    timer.textContent = 'Бесплатно!';
+  if (canOpenPack()) {
+    sub.textContent   = getCollection().length === 0 ? 'Первый пак бесплатно!' : 'Доступен!';
+    timer.textContent = 'Открыть сейчас';
+    if (btn) btn.disabled = false;
   } else {
     sub.textContent   = 'Следующий пак через';
-    timer.textContent = formatTime(msUntilNextReward());
+    timer.textContent = formatTime(msUntilNextPack());
+    if (btn) btn.disabled = true;
   }
 }
 
@@ -979,17 +994,12 @@ async function main() {
   // Wire up rating refresh
   document.getElementById('btn-refresh-rating').addEventListener('click', loadRatingScreen);
 
-  const collection = getCollection();
-  const alreadyOpened = collection.length > 0;
-
-  if (alreadyOpened) {
-    document.getElementById('btn-open-pack').disabled = true;
-  }
-
   renderHomeScreen();
   showScreen('welcome', 'home');
 
   document.getElementById('btn-open-pack').addEventListener('click', async () => {
+    if (!canOpenPack()) return; // guard against double-click
+
     const btn = document.getElementById('btn-open-pack');
     btn.disabled = true;
 
@@ -999,11 +1009,11 @@ async function main() {
     showLoading(false);
 
     addToCollection(cards);
-
-    document.getElementById('already-opened-msg').classList.remove('hidden');
+    markPackOpened(); // start 24h cooldown
 
     await runPackOpeningSequence(cards, showResultsScreen);
 
+    renderHomeScreen(); // refresh timer on home screen
     submitCurrentScore();
   });
 }
