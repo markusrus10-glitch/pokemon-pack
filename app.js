@@ -421,7 +421,7 @@ const SWIPE_THRESHOLD = 70; // px to trigger reveal
 
 function revealCardWithSwipe(card, cardSlot, counterEl, index, total) {
   return new Promise(resolve => {
-    // Build card face-down
+    // Build card face-down, then auto-flip to reveal
     const cardEl = buildCardElement(card, false);
     cardEl.classList.add('entering');
     cardSlot.appendChild(cardEl);
@@ -430,6 +430,19 @@ function revealCardWithSwipe(card, cardSlot, counterEl, index, total) {
 
     // Update counter
     if (counterEl) counterEl.textContent = `${index + 1} / ${total}`;
+
+    // Auto-reveal: flip to front immediately
+    setTimeout(() => {
+      inner.style.transition = 'transform 0.35s ease';
+      inner.classList.add('flipped');
+      haptic({ common:'light', uncommon:'light', rare:'medium', ultraRare:'heavy', crown:'heavy' }[card.rarity] || 'light');
+      if (card.rarity === 'ultraRare' || card.rarity === 'crown') {
+        const overlay = document.createElement('div');
+        overlay.className = 'spotlight-overlay ' + (card.rarity === 'crown' ? 'crown' : 'ultra');
+        document.body.appendChild(overlay);
+        setTimeout(() => overlay.remove(), 1400);
+      }
+    }, 80);
 
     let startX = 0, startY = 0;
     let dragging = false;
@@ -467,47 +480,18 @@ function revealCardWithSwipe(card, cardSlot, counterEl, index, total) {
       const dx = (e.changedTouches ? e.changedTouches[0].clientX : e.clientX) - startX;
 
       if (Math.abs(dx) >= SWIPE_THRESHOLD) {
-        // Swipe confirmed — flip then fly off
+        // Swipe confirmed — fly off immediately, no delays
         done = true;
         cleanup();
         const dir = dx > 0 ? 1 : -1;
 
-        // Flash spotlight for rare cards
-        if (card.rarity === 'ultraRare' || card.rarity === 'crown') {
-          const overlay = document.createElement('div');
-          overlay.className = 'spotlight-overlay ' + (card.rarity === 'crown' ? 'crown' : 'ultra');
-          document.body.appendChild(overlay);
-          setTimeout(() => overlay.remove(), 1400);
-        }
+        cardEl.style.transition = 'transform 0.3s ease-in, opacity 0.25s ease';
+        cardEl.style.transform  = `translateX(${dir * 110}vw) rotate(${dir * 22}deg)`;
+        cardEl.style.opacity    = '0';
 
-        // Flip card to front — snap back to center first, then flip
-        cardEl.style.transition = 'transform 0.2s ease';
-        cardEl.style.transform  = 'translateX(0) rotate(0deg)';
-
-        setTimeout(() => {
-          inner.style.transition = 'transform 0.4s ease';
-          inner.classList.add('flipped');
-
-          const hapticType = { common:'light', uncommon:'light', rare:'medium', ultraRare:'heavy', crown:'heavy' }[card.rarity] || 'light';
-          haptic(hapticType);
-
-          // How long player sees the revealed card (rarity-based)
-          const viewPause = card.rarity === 'crown'     ? 2200
-                          : card.rarity === 'ultraRare' ? 1800
-                          : card.rarity === 'rare'      ? 1400
-                          : 1000;
-
-          // After viewing — fly off in original swipe direction
-          setTimeout(() => {
-            cardEl.style.transition = 'transform 0.4s cubic-bezier(0.4,0,0.6,1), opacity 0.3s ease';
-            cardEl.style.transform  = `translateX(${dir * 120}%) rotate(${dir * 18}deg)`;
-            cardEl.style.opacity    = '0';
-            setTimeout(() => {
-              cardEl.remove();
-              resolve();
-            }, 420);
-          }, viewPause);
-        }, 220);
+        // Resolve right away so next card appears immediately
+        resolve();
+        setTimeout(() => cardEl.remove(), 350);
 
       } else {
         // Snap back
@@ -578,7 +562,6 @@ async function runPackOpeningSequence(cards, onDone) {
 
   // Reveal each card via swipe
   for (let i = 0; i < cards.length; i++) {
-    await sleep(i === 0 ? 200 : 100); // brief pause before card enters
     await revealCardWithSwipe(cards[i], cardSlot, counterEl, i, cards.length);
   }
 
