@@ -170,6 +170,7 @@ function msUntilNextReward() {
 
 // Main pack — once per 24h
 function canOpenPack() {
+  return true; // TEST MODE — remove cooldown
   const last = localStorage.getItem(KEY_LAST_PACK);
   if (!last) return true;
   return Date.now() - new Date(last).getTime() > DAILY_INTERVAL_MS;
