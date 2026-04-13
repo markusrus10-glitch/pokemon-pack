@@ -382,30 +382,31 @@ html, body {
 /* Slot that holds the current card during swipe */
 .card-slot {
   position: relative;
-  width: min(78vw, 320px);
-  height: min(74vh, 448px);
+  width: 92vw;
+  height: 82vh;
   display: flex; align-items: center; justify-content: center;
 }
 .card-slot .card-wrapper {
   position: absolute;
-  width: min(78vw, 320px);
-  height: min(74vh, 448px);
-  --card-w: min(78vw, 320px);
-  --card-h: min(74vh, 448px);
+  width: 92vw;
+  height: 82vh;
+  --card-w: 92vw;
+  --card-h: 82vh;
   cursor: grab;
   will-change: transform;
   touch-action: none;
 }
 .card-slot .card-wrapper:active { cursor: grabbing; }
 /* Scale up card internals for big swipe cards */
-.card-slot .card-pokemon-name { font-size: 1rem; max-width: 170px; }
-.card-slot .card-hp { font-size: 0.9rem; }
-.card-slot .card-header { padding: 14px 16px 6px; }
-.card-slot .card-footer { padding: 8px 16px 14px; }
-.card-slot .card-rarity-indicator { font-size: 1.1rem; letter-spacing: 3px; }
+.card-slot .card-pokemon-name { font-size: 1.3rem; max-width: 55%; }
+.card-slot .card-hp { font-size: 1.1rem; }
+.card-slot .card-header { padding: 18px 20px 8px; }
+.card-slot .card-footer { padding: 10px 20px 18px; }
+.card-slot .card-rarity-indicator { font-size: 1.4rem; letter-spacing: 4px; }
 .card-slot .card-pokemon-image { max-height: none; height: 100%; }
-.card-slot .card-image-area { padding: 8px 16px; }
-.card-slot .card-image-area::before { width: 160px; height: 160px; }
+.card-slot .card-image-area { padding: 10px 20px; }
+.card-slot .card-image-area::before { width: 200px; height: 200px; }
+.card-slot .card-back-logo { font-size: 4rem; }
 
 /* Counter "1 / 5" */
 .card-counter {
