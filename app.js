@@ -233,11 +233,15 @@ async function fetchLeaderboard() {
 // ============================================================
 
 async function prefetchImages(cards) {
-  await Promise.all(cards.map(c => new Promise(r => {
-    const img = new Image();
-    img.onload = img.onerror = r;
-    img.src = getSpriteUrl(c.id);
-  })));
+  const timeout = ms => new Promise(r => setTimeout(r, ms));
+  await Promise.all(cards.map(c => Promise.race([
+    new Promise(r => {
+      const img = new Image();
+      img.onload = img.onerror = r;
+      img.src = getSpriteUrl(c.id);
+    }),
+    timeout(5000), // max 5s per image
+  ])));
 }
 
 // ============================================================
@@ -1015,18 +1019,24 @@ async function main() {
     const btn = document.getElementById('btn-open-pack');
     btn.disabled = true;
 
-    showLoading(true);
-    const cards = rollMiniPack(5);
-    await prefetchImages(cards);
-    showLoading(false);
+    try {
+      showLoading(true);
+      const cards = rollMiniPack(5);
+      await prefetchImages(cards);
+      showLoading(false);
 
-    addToCollection(cards);
-    markPackOpened(); // start 24h cooldown
+      addToCollection(cards);
+      markPackOpened(); // start 24h cooldown
 
-    await runPackOpeningSequence(cards, showResultsScreen);
+      await runPackOpeningSequence(cards, showResultsScreen);
 
-    renderHomeScreen(); // refresh timer on home screen
-    submitCurrentScore();
+      renderHomeScreen(); // refresh timer on home screen
+      submitCurrentScore();
+    } catch (err) {
+      console.error('Pack open error:', err);
+      showLoading(false);
+      btn.disabled = false;
+    }
   });
 }
 
