@@ -478,23 +478,34 @@ function revealCardWithSwipe(card, cardSlot, counterEl, index, total) {
           setTimeout(() => overlay.remove(), 1400);
         }
 
-        // Flip card to front
-        inner.style.transition = 'transform 0.25s ease';
-        inner.classList.add('flipped');
+        // Flip card to front — snap back to center first, then flip
+        cardEl.style.transition = 'transform 0.2s ease';
+        cardEl.style.transform  = 'translateX(0) rotate(0deg)';
 
-        const hapticType = { common:'light', uncommon:'light', rare:'medium', ultraRare:'heavy', crown:'heavy' }[card.rarity] || 'light';
-        haptic(hapticType);
-
-        // Fly off after flip
         setTimeout(() => {
-          cardEl.style.transition = 'transform 0.45s cubic-bezier(0.4,0,0.6,1), opacity 0.35s ease';
-          cardEl.style.transform  = `translateX(${dir * 130}%) rotate(${dir * 20}deg)`;
-          cardEl.style.opacity    = '0';
+          inner.style.transition = 'transform 0.4s ease';
+          inner.classList.add('flipped');
+
+          const hapticType = { common:'light', uncommon:'light', rare:'medium', ultraRare:'heavy', crown:'heavy' }[card.rarity] || 'light';
+          haptic(hapticType);
+
+          // How long player sees the revealed card (rarity-based)
+          const viewPause = card.rarity === 'crown'     ? 2200
+                          : card.rarity === 'ultraRare' ? 1800
+                          : card.rarity === 'rare'      ? 1400
+                          : 1000;
+
+          // After viewing — fly off in original swipe direction
           setTimeout(() => {
-            cardEl.remove();
-            resolve();
-          }, 480);
-        }, 280);
+            cardEl.style.transition = 'transform 0.4s cubic-bezier(0.4,0,0.6,1), opacity 0.3s ease';
+            cardEl.style.transform  = `translateX(${dir * 120}%) rotate(${dir * 18}deg)`;
+            cardEl.style.opacity    = '0';
+            setTimeout(() => {
+              cardEl.remove();
+              resolve();
+            }, 420);
+          }, viewPause);
+        }, 220);
 
       } else {
         // Snap back
