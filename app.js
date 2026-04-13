@@ -170,10 +170,7 @@ function msUntilNextReward() {
 
 // Main pack — once per 24h
 function canOpenPack() {
-  return true; // TEST MODE — remove cooldown
-  const last = localStorage.getItem(KEY_LAST_PACK);
-  if (!last) return true;
-  return Date.now() - new Date(last).getTime() > DAILY_INTERVAL_MS;
+  return true; // TEST MODE — remove this line to restore 24h cooldown
 }
 function markPackOpened() {
   localStorage.setItem(KEY_LAST_PACK, new Date().toISOString());
@@ -549,10 +546,8 @@ async function runPackOpeningSequence(cards, onDone) {
   revealArea.classList.add('hidden');
   revealArea.innerHTML = '';
 
-  // Tap pack to open
-  await new Promise(resolve => {
-    packVisual.addEventListener('click', resolve, { once: true });
-  });
+  // Short pause so user sees the pack before it opens
+  await sleep(400);
 
   haptic('medium');
   packInstr.textContent = '';
