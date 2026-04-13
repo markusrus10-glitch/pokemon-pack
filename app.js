@@ -381,8 +381,8 @@ function showLoading(show) {
   document.getElementById('loading-overlay').classList.toggle('hidden', !show);
 }
 
-// Global nav function (called from HTML onclick)
-window.navigate = function(dest) {
+// Global functions exposed to HTML (onclick attributes)
+/** @type {any} */ (window).navigate = function(dest) {
   if (dest === 'home') {
     renderHomeScreen();
     showScreen('welcome', 'home');
@@ -397,22 +397,128 @@ window.navigate = function(dest) {
 };
 
 // ============================================================
-// PACK OPENING SEQUENCE
+// PACK OPENING SEQUENCE — SWIPE TO REVEAL
 // ============================================================
+
+const SWIPE_THRESHOLD = 70; // px to trigger reveal
+
+function revealCardWithSwipe(card, cardSlot, counterEl, index, total) {
+  return new Promise(resolve => {
+    // Build card face-down
+    const cardEl = buildCardElement(card, false);
+    cardEl.classList.add('entering');
+    cardSlot.appendChild(cardEl);
+
+    const inner = cardEl.querySelector('.card-inner');
+
+    // Update counter
+    if (counterEl) counterEl.textContent = `${index + 1} / ${total}`;
+
+    let startX = 0, startY = 0;
+    let dragging = false;
+    let done = false;
+
+    function getX(e) { return e.touches ? e.touches[0].clientX : e.clientX; }
+    function getY(e) { return e.touches ? e.touches[0].clientY : e.clientY; }
+
+    function onStart(e) {
+      if (done) return;
+      startX = getX(e);
+      startY = getY(e);
+      dragging = true;
+      cardEl.style.transition = 'none';
+    }
+
+    function onMove(e) {
+      if (!dragging || done) return;
+      const dx = getX(e) - startX;
+      const dy = getY(e) - startY;
+      // Only horizontal swipe (ignore vertical scroll)
+      if (Math.abs(dx) < Math.abs(dy) * 0.6 && Math.abs(dx) < 20) return;
+      if (e.cancelable) e.preventDefault();
+      const rotate = dx * 0.07;
+      const progress = Math.min(Math.abs(dx) / SWIPE_THRESHOLD, 1);
+      cardEl.style.transform = `translateX(${dx}px) rotate(${rotate}deg)`;
+      // Show directional tint on card front
+      inner.style.setProperty('--swipe-progress', progress);
+      inner.style.setProperty('--swipe-dir', dx > 0 ? '1' : '-1');
+    }
+
+    function onEnd(e) {
+      if (!dragging || done) return;
+      dragging = false;
+      const dx = (e.changedTouches ? e.changedTouches[0].clientX : e.clientX) - startX;
+
+      if (Math.abs(dx) >= SWIPE_THRESHOLD) {
+        // Swipe confirmed — flip then fly off
+        done = true;
+        cleanup();
+        const dir = dx > 0 ? 1 : -1;
+
+        // Flash spotlight for rare cards
+        if (card.rarity === 'ultraRare' || card.rarity === 'crown') {
+          const overlay = document.createElement('div');
+          overlay.className = 'spotlight-overlay ' + (card.rarity === 'crown' ? 'crown' : 'ultra');
+          document.body.appendChild(overlay);
+          setTimeout(() => overlay.remove(), 1400);
+        }
+
+        // Flip card to front
+        inner.style.transition = 'transform 0.25s ease';
+        inner.classList.add('flipped');
+
+        const hapticType = { common:'light', uncommon:'light', rare:'medium', ultraRare:'heavy', crown:'heavy' }[card.rarity] || 'light';
+        haptic(hapticType);
+
+        // Fly off after flip
+        setTimeout(() => {
+          cardEl.style.transition = 'transform 0.45s cubic-bezier(0.4,0,0.6,1), opacity 0.35s ease';
+          cardEl.style.transform  = `translateX(${dir * 130}%) rotate(${dir * 20}deg)`;
+          cardEl.style.opacity    = '0';
+          setTimeout(() => {
+            cardEl.remove();
+            resolve();
+          }, 480);
+        }, 280);
+
+      } else {
+        // Snap back
+        cardEl.style.transition = 'transform 0.35s cubic-bezier(0.34,1.56,0.64,1)';
+        cardEl.style.transform  = '';
+      }
+    }
+
+    function cleanup() {
+      cardEl.removeEventListener('touchstart', onStart);
+      cardEl.removeEventListener('touchmove',  onMove);
+      cardEl.removeEventListener('touchend',   onEnd);
+      cardEl.removeEventListener('mousedown',  onStart);
+      window.removeEventListener('mousemove',  onMove);
+      window.removeEventListener('mouseup',    onEnd);
+    }
+
+    cardEl.addEventListener('touchstart', onStart, { passive: true });
+    cardEl.addEventListener('touchmove',  onMove,  { passive: false });
+    cardEl.addEventListener('touchend',   onEnd);
+    cardEl.addEventListener('mousedown',  onStart);
+    window.addEventListener('mousemove',  onMove);
+    window.addEventListener('mouseup',    onEnd);
+  });
+}
 
 async function runPackOpeningSequence(cards, onDone) {
   showScreen('pack');
 
-  const packVisual  = document.getElementById('pack-visual');
-  const packInstr   = document.getElementById('pack-instruction');
-  const revealArea  = document.getElementById('cards-reveal-area');
+  const packVisual = document.getElementById('pack-visual');
+  const packInstr  = document.getElementById('pack-instruction');
+  const revealArea = document.getElementById('cards-reveal-area');
 
-  // Reset pack state
   packVisual.classList.remove('shaking', 'bursting');
   packVisual.style.display = '';
   revealArea.classList.add('hidden');
   revealArea.innerHTML = '';
 
+  // Tap pack to open
   await new Promise(resolve => {
     packVisual.addEventListener('click', resolve, { once: true });
   });
@@ -428,32 +534,29 @@ async function runPackOpeningSequence(cards, onDone) {
   packVisual.style.display = 'none';
   revealArea.classList.remove('hidden');
 
+  // Card slot (where card lives)
+  const cardSlot = document.createElement('div');
+  cardSlot.className = 'card-slot';
+  revealArea.appendChild(cardSlot);
+
+  // Counter "1 / 5"
+  const counterEl = document.createElement('div');
+  counterEl.className = 'card-counter';
+  revealArea.appendChild(counterEl);
+
+  // Swipe hint
+  const hint = document.createElement('div');
+  hint.className = 'swipe-hint';
+  hint.innerHTML = '<span class="swipe-arrow">←</span> смахни <span class="swipe-arrow">→</span>';
+  revealArea.appendChild(hint);
+
+  // Reveal each card via swipe
   for (let i = 0; i < cards.length; i++) {
-    const card = cards[i];
-
-    if (card.rarity === 'ultraRare' || card.rarity === 'crown') {
-      const overlay = document.createElement('div');
-      overlay.className = 'spotlight-overlay ' + (card.rarity === 'crown' ? 'crown' : 'ultra');
-      document.body.appendChild(overlay);
-      setTimeout(() => overlay.remove(), 1400);
-    }
-
-    revealArea.innerHTML = '';
-    const cardEl = buildCardElement(card, false);
-    cardEl.classList.add('entering');
-    revealArea.appendChild(cardEl);
-    await sleep(500);
-
-    cardEl.querySelector('.card-inner').classList.add('flipped');
-
-    const hapticType = { common:'light', uncommon:'light', rare:'medium', ultraRare:'heavy', crown:'heavy' }[card.rarity] || 'light';
-    haptic(hapticType);
-
-    const pause = card.rarity === 'crown' ? 2600 : card.rarity === 'ultraRare' ? 2100 : card.rarity === 'rare' ? 1600 : 1200;
-    await sleep(pause);
+    await sleep(i === 0 ? 200 : 100); // brief pause before card enters
+    await revealCardWithSwipe(cards[i], cardSlot, counterEl, i, cards.length);
   }
 
-  await sleep(300);
+  await sleep(200);
   if (onDone) onDone(cards);
 }
 
@@ -524,7 +627,6 @@ function renderHomeScreen() {
 function updateHomePackTimer() {
   const sub   = document.getElementById('home-pack-sub');
   const timer = document.getElementById('home-pack-timer');
-  const btn   = document.getElementById('btn-open-pack');
   if (!sub || !timer) return;
 
   if (canClaimReward() && getCollection().length > 0) {
@@ -780,7 +882,7 @@ function applyAvatarToEl(el, avatarId, fallbackLetter) {
   }
 }
 
-window.openAvatarPicker = function() {
+/** @type {any} */ (window).openAvatarPicker = function() {
   const modal  = document.getElementById('avatar-modal');
   const grid   = document.getElementById('avatar-picker-grid');
   const currId = getAvatarId();

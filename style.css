@@ -372,7 +372,61 @@ html, body {
 .pack-visual.shaking  { animation: pack-shake 0.8s ease-in-out forwards; cursor: default; }
 @keyframes pack-burst { 0%{transform:scale(1);opacity:1} 40%{transform:scale(1.4);opacity:0.7} 100%{transform:scale(0) rotate(15deg);opacity:0} }
 .pack-visual.bursting { animation: pack-burst 0.5s ease-in forwards; }
-.cards-reveal-area { display: flex; flex-direction: column; align-items: center; width: 100%; }
+.cards-reveal-area {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  width: 100%; gap: 20px;
+  flex: 1;
+}
+
+/* Slot that holds the current card during swipe */
+.card-slot {
+  position: relative;
+  width: var(--card-w, 158px);
+  height: var(--card-h, 221px);
+  display: flex; align-items: center; justify-content: center;
+}
+.card-slot .card-wrapper {
+  position: absolute;
+  cursor: grab;
+  will-change: transform;
+  touch-action: none;
+}
+.card-slot .card-wrapper:active { cursor: grabbing; }
+
+/* Counter "1 / 5" */
+.card-counter {
+  font-size: 0.85rem; font-weight: 700;
+  color: rgba(255,255,255,0.45);
+  letter-spacing: 0.1em;
+  order: -1; /* show above card */
+}
+
+/* Swipe hint arrows */
+.swipe-hint {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 0.82rem; color: rgba(255,255,255,0.4);
+  animation: hint-pulse 2s ease-in-out infinite;
+}
+.swipe-arrow {
+  font-size: 1rem;
+  display: inline-block;
+}
+.swipe-hint .swipe-arrow:first-child { animation: hint-left  1.4s ease-in-out infinite; }
+.swipe-hint .swipe-arrow:last-child  { animation: hint-right 1.4s ease-in-out infinite; }
+
+@keyframes hint-pulse {
+  0%,100% { opacity: 0.4; }
+  50%      { opacity: 0.8; }
+}
+@keyframes hint-left {
+  0%,100% { transform: translateX(0); opacity: 0.4; }
+  50%      { transform: translateX(-5px); opacity: 1; }
+}
+@keyframes hint-right {
+  0%,100% { transform: translateX(0); opacity: 0.4; }
+  50%      { transform: translateX(5px); opacity: 1; }
+}
 
 /* ============================================================
    CARD 3D FLIP
