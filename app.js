@@ -102,6 +102,7 @@ const KEY_LAST_PACK     = 'pokemon_last_pack_v1';
 const KEY_USERNAME      = 'pokemon_username_v1';
 const KEY_AVATAR        = 'pokemon_avatar_v1';
 const KEY_OLD_PACK      = 'pokemon_pack_v1';
+const KEY_MY_LISTINGS   = 'pokemon_my_listings_v1';
 
 // Leaderboard
 const JSONBLOB_URL = 'https://jsonblob.com/api/jsonBlob/019d7b99-ed6c-728b-b65c-a6dab98ec4bb';
@@ -261,7 +262,8 @@ async function submitScore(name, score, cards) {
     const res = await fetch(JSONBLOB_URL);
     if (!res.ok) return;
     const data = await res.json();
-    const players = Array.isArray(data.players) ? data.players : [];
+    const players  = Array.isArray(data.players)  ? data.players  : [];
+    const listings = Array.isArray(data.listings) ? data.listings : [];
 
     const idx = players.findIndex(p => p.name === name);
     const entry = { name, score, cards, updatedAt: new Date().toISOString() };
@@ -271,7 +273,7 @@ async function submitScore(name, score, cards) {
     await fetch(JSONBLOB_URL, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ players }),
+      body: JSON.stringify({ players, listings }),
     });
   } catch {}
 }
@@ -481,6 +483,9 @@ function showLoading(show) {
   } else if (dest === 'rating') {
     showScreen('rating', 'rating');
     loadRatingScreen();
+  } else if (dest === 'market') {
+    showScreen('market', 'market');
+    renderMarketScreen();
   }
 };
 
@@ -834,10 +839,12 @@ function closeRewardModal() {
 // SELL MODAL
 // ============================================================
 
-let sellTargetUid = null;
+let sellTargetUid  = null;
+let sellTargetCard = null;
 
 function openSellModal(card) {
-  sellTargetUid = card.uid;
+  sellTargetUid  = card.uid;
+  sellTargetCard = card;
   const modal = document.getElementById('sell-modal');
   const area  = document.getElementById('sell-modal-card-area');
 
@@ -855,7 +862,8 @@ function openSellModal(card) {
 
 function closeSellModal() {
   document.getElementById('sell-modal').classList.add('hidden');
-  sellTargetUid = null;
+  sellTargetUid  = null;
+  sellTargetCard = null;
 }
 
 function confirmSell() {
@@ -873,6 +881,270 @@ function confirmSell() {
   renderProfileScreen();
   renderHomeScreen();
   submitCurrentScore();
+}
+
+// ============================================================
+// MARKETPLACE — LOCAL LISTINGS CACHE
+// ============================================================
+
+function getMyListings() {
+  try { return JSON.parse(localStorage.getItem(KEY_MY_LISTINGS)) || []; } catch { return []; }
+}
+function saveMyListings(arr) {
+  try { localStorage.setItem(KEY_MY_LISTINGS, JSON.stringify(arr)); } catch {}
+}
+function addMyListingLocal(listing) {
+  const mine = getMyListings();
+  mine.push({ uid: listing.uid, card: listing.card });
+  saveMyListings(mine);
+}
+function removeMyListingLocal(uid) {
+  saveMyListings(getMyListings().filter(l => l.uid !== uid));
+}
+
+// ============================================================
+// MARKETPLACE — API
+// ============================================================
+
+async function fetchListings() {
+  const res  = await fetch(JSONBLOB_URL);
+  const data = await res.json();
+  return Array.isArray(data.listings) ? data.listings : [];
+}
+
+async function createListing(card, price) {
+  const res  = await fetch(JSONBLOB_URL);
+  const data = await res.json();
+  const players  = Array.isArray(data.players)  ? data.players  : [];
+  const listings = Array.isArray(data.listings) ? data.listings : [];
+
+  const listing = {
+    uid:        makeUid(),
+    sellerName: getUsername(),
+    card:       { ...card },
+    price:      Math.max(1, Math.floor(Number(price))),
+    listedAt:   new Date().toISOString(),
+  };
+  listings.push(listing);
+
+  await fetch(JSONBLOB_URL, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ players, listings }),
+  });
+  return listing;
+}
+
+async function removeListingRemote(uid) {
+  const res  = await fetch(JSONBLOB_URL);
+  const data = await res.json();
+  const players  = Array.isArray(data.players)  ? data.players  : [];
+  const listings = (Array.isArray(data.listings) ? data.listings : []).filter(l => l.uid !== uid);
+
+  await fetch(JSONBLOB_URL, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ players, listings }),
+  });
+}
+
+async function buyListing(listing) {
+  if (getCoins() < listing.price) return false;
+
+  await removeListingRemote(listing.uid);
+  removeMyListingLocal(listing.uid); // in case buyer == seller somehow
+
+  const newCoins = getCoins() - listing.price;
+  localStorage.setItem(KEY_COINS, String(newCoins));
+  addToCollection([enrichCard({ ...listing.card, uid: makeUid(), obtainedAt: new Date().toISOString() })]);
+  haptic('medium');
+  return true;
+}
+
+async function delistListing(listing) {
+  await removeListingRemote(listing.uid);
+  removeMyListingLocal(listing.uid);
+  // Return card to collection
+  addToCollection([enrichCard({ ...listing.card, uid: makeUid(), obtainedAt: new Date().toISOString() })]);
+  haptic('light');
+}
+
+// ============================================================
+// MARKET SCREEN
+// ============================================================
+
+async function renderMarketScreen() {
+  const list = document.getElementById('market-list');
+  list.innerHTML = '<div class="rating-empty">Загрузка...</div>';
+
+  let listings;
+  try {
+    listings = await fetchListings();
+  } catch {
+    list.innerHTML = '<div class="market-empty">Ошибка загрузки. Попробуйте позже.</div>';
+    return;
+  }
+
+  const myName = getUsername();
+  const myCoins = getCoins();
+
+  if (listings.length === 0) {
+    list.innerHTML = '<div class="market-empty">Пока нет лотов.<br>Выставь карточки из профиля!</div>';
+    return;
+  }
+
+  list.innerHTML = '';
+  // Sort: own listings first, then by price
+  const sorted = [...listings].sort((a, b) => {
+    if ((a.sellerName === myName) !== (b.sellerName === myName)) return a.sellerName === myName ? -1 : 1;
+    return a.price - b.price;
+  });
+
+  sorted.forEach(listing => {
+    const card   = listing.card;
+    const isMine = listing.sellerName === myName;
+
+    const row = document.createElement('div');
+    row.className = 'market-row' + (isMine ? ' is-mine' : '');
+
+    // Card thumbnail
+    const thumb = document.createElement('div');
+    thumb.className = `market-thumb rarity-${card.rarityCSS || 'common'}`;
+    if (card.imageUrl) {
+      const img = document.createElement('img');
+      img.src = card.imageUrl;
+      img.alt = card.name;
+      img.onerror = () => { img.style.opacity = '0.3'; };
+      thumb.appendChild(img);
+    }
+    row.appendChild(thumb);
+
+    // Info
+    const info = document.createElement('div');
+    info.className = 'market-info';
+    info.innerHTML = `
+      <div class="market-card-name">${card.name}</div>
+      <div class="market-card-rarity ${card.rarityCSS || 'common'}">${card.rarityLabel || ''}</div>
+      <div class="market-seller">${isMine ? '⭐ Ваш лот' : '👤 ' + listing.sellerName}</div>`;
+    row.appendChild(info);
+
+    // Right side: price + action button
+    const right = document.createElement('div');
+    right.className = 'market-right';
+
+    const priceEl = document.createElement('div');
+    priceEl.className = 'market-price';
+    priceEl.textContent = '🪙 ' + listing.price.toLocaleString();
+    right.appendChild(priceEl);
+
+    if (isMine) {
+      const btn = document.createElement('button');
+      btn.className = 'btn-delist';
+      btn.textContent = 'Снять';
+      btn.addEventListener('click', async () => {
+        btn.disabled = true;
+        btn.textContent = '...';
+        try {
+          await delistListing(listing);
+          renderMarketScreen();
+          renderProfileScreen();
+          renderHomeScreen();
+        } catch {
+          btn.disabled = false;
+          btn.textContent = 'Снять';
+        }
+      });
+      right.appendChild(btn);
+    } else {
+      const btn = document.createElement('button');
+      btn.className = 'btn-buy';
+      btn.textContent = 'Купить';
+      if (myCoins < listing.price) btn.disabled = true;
+      btn.addEventListener('click', async () => {
+        btn.disabled = true;
+        btn.textContent = '...';
+        try {
+          const ok = await buyListing(listing);
+          if (ok) {
+            renderMarketScreen();
+            renderHomeScreen();
+            submitCurrentScore();
+          } else {
+            btn.textContent = 'Купить';
+            btn.disabled = false;
+          }
+        } catch {
+          btn.textContent = 'Купить';
+          btn.disabled = false;
+        }
+      });
+      right.appendChild(btn);
+    }
+
+    row.appendChild(right);
+    list.appendChild(row);
+  });
+}
+
+// ============================================================
+// LIST-ON-MARKET MODAL
+// ============================================================
+
+let listTargetCard = null;
+
+function openListModal(card) {
+  listTargetCard = card;
+  const modal   = document.getElementById('list-modal');
+  const area    = document.getElementById('list-modal-card-area');
+  const input   = document.getElementById('list-price-input');
+  const hint    = document.getElementById('list-price-hint');
+
+  area.innerHTML = '';
+  const el = buildCardElement(card, true);
+  el.querySelector('.card-wrapper').style.cssText = 'width:130px;height:182px;--card-w:130px;--card-h:182px';
+  area.appendChild(el);
+
+  input.value = String(card.value || 50);
+  hint.textContent = `Минимальная стоимость: 🪙 ${(card.value || 50).toLocaleString()}`;
+
+  modal.classList.remove('hidden');
+}
+
+function closeListModal() {
+  document.getElementById('list-modal').classList.add('hidden');
+  listTargetCard = null;
+}
+
+async function confirmListing() {
+  if (!listTargetCard) return;
+
+  const input   = document.getElementById('list-price-input');
+  const price   = parseInt(input.value, 10);
+  if (!price || price < 1) { input.focus(); return; }
+
+  const btn = document.getElementById('btn-list-confirm');
+  btn.disabled = true;
+  btn.textContent = '...';
+
+  try {
+    // Remove card from collection first
+    const col = getCollection();
+    const idx = col.findIndex(c => c.uid === listTargetCard.uid);
+    if (idx !== -1) col.splice(idx, 1);
+    saveCollection(col);
+
+    const listing = await createListing(listTargetCard, price);
+    addMyListingLocal(listing);
+
+    haptic('medium');
+    closeListModal();
+    renderProfileScreen();
+    renderHomeScreen();
+    submitCurrentScore();
+  } catch {
+    btn.disabled = false;
+    btn.textContent = 'Выставить';
+  }
 }
 
 // ============================================================
@@ -1181,9 +1453,22 @@ async function main() {
   document.getElementById('btn-sell-confirm').addEventListener('click', confirmSell);
   document.getElementById('btn-sell-cancel').addEventListener('click', closeSellModal);
   document.getElementById('sell-modal-backdrop').addEventListener('click', closeSellModal);
+  document.getElementById('btn-sell-list').addEventListener('click', () => {
+    const card = sellTargetCard;
+    closeSellModal();
+    if (card) openListModal(card);
+  });
+
+  // Wire up list-on-market modal
+  document.getElementById('btn-list-confirm').addEventListener('click', confirmListing);
+  document.getElementById('btn-list-cancel').addEventListener('click', closeListModal);
+  document.getElementById('list-modal-backdrop').addEventListener('click', closeListModal);
 
   // Wire up rating refresh
   document.getElementById('btn-refresh-rating').addEventListener('click', loadRatingScreen);
+
+  // Wire up market refresh
+  document.getElementById('btn-refresh-market').addEventListener('click', renderMarketScreen);
 
   renderHomeScreen();
   showScreen('welcome', 'home');

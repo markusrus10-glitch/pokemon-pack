@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Pokémon Паки</title>
-  <link rel="stylesheet" href="style.css?v=10" />
+  <link rel="stylesheet" href="style.css?v=11" />
 </head>
 <body>
 
@@ -167,6 +167,18 @@
     </div>
   </div>
 
+  <!-- ======= SCREEN 6: Market ======= -->
+  <div id="screen-market" class="screen hidden has-nav">
+    <div class="market-top">
+      <h2 class="page-title">Маркетплейс</h2>
+      <button class="btn-refresh" id="btn-refresh-market">↻</button>
+    </div>
+    <p class="market-subtitle">Покупай и продавай карточки</p>
+    <div id="market-list" class="market-list">
+      <div class="rating-empty">Загрузка...</div>
+    </div>
+  </div>
+
   <!-- ======= BOTTOM NAV ======= -->
   <nav class="main-nav" id="main-nav">
     <button class="nav-tab active" id="nav-home" onclick="navigate('home')">
@@ -180,6 +192,10 @@
     <button class="nav-tab" id="nav-rating" onclick="navigate('rating')">
       <span class="nav-ico">🏆</span>
       <span class="nav-lbl">Рейтинг</span>
+    </button>
+    <button class="nav-tab" id="nav-market" onclick="navigate('market')">
+      <span class="nav-ico">🛒</span>
+      <span class="nav-lbl">Маркет</span>
     </button>
   </nav>
 
@@ -201,7 +217,28 @@
       <p class="modal-sell-text">Продать за <strong id="sell-modal-value">0</strong> 🪙?</p>
       <div class="modal-row">
         <button class="btn-danger" id="btn-sell-confirm">Продать</button>
+        <button class="btn-market-list" id="btn-sell-list">🛒 На маркет</button>
+      </div>
+      <div class="modal-row">
         <button class="btn-secondary" id="btn-sell-cancel">Отмена</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======= LIST-ON-MARKET MODAL ======= -->
+  <div id="list-modal" class="modal hidden">
+    <div class="modal-backdrop" id="list-modal-backdrop"></div>
+    <div class="modal-sheet">
+      <h3 class="modal-title">Выставить на маркет</h3>
+      <div id="list-modal-card-area"></div>
+      <div class="list-price-row">
+        <span class="list-price-label">Цена 🪙</span>
+        <input type="number" id="list-price-input" class="list-price-input" min="1" placeholder="Введите цену" />
+      </div>
+      <p class="modal-sub list-price-hint" id="list-price-hint"></p>
+      <div class="modal-row">
+        <button class="btn-battle small" id="btn-list-confirm">Выставить</button>
+        <button class="btn-secondary" id="btn-list-cancel">Отмена</button>
       </div>
     </div>
   </div>
@@ -224,6 +261,6 @@
   </div>
 
   <script src="https://telegram.org/js/telegram-web-app.js" defer></script>
-  <script src="app.js?v=10" defer></script>
+  <script src="app.js?v=11" defer></script>
 </body>
 </html>
