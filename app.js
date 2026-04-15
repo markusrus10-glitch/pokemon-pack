@@ -2,30 +2,186 @@
 // CONSTANTS
 // ============================================================
 
+// Real TCG card pool — Base Set, Jungle, Fossil (pokemontcg.io images)
+const T = (set, n) => `https://images.pokemontcg.io/${set}/${n}.png`;
 const POKEMON_POOL = {
-  common: [
-    {id:1,name:'Bulbasaur'},{id:4,name:'Charmander'},{id:7,name:'Squirtle'},
-    {id:10,name:'Caterpie'},{id:16,name:'Pidgey'},{id:19,name:'Rattata'},
-    {id:25,name:'Pikachu'},{id:39,name:'Jigglypuff'},{id:52,name:'Meowth'},
-    {id:54,name:'Psyduck'},{id:74,name:'Geodude'},{id:129,name:'Magikarp'},
-  ],
-  uncommon: [
-    {id:2,name:'Ivysaur'},{id:5,name:'Charmeleon'},{id:8,name:'Wartortle'},
-    {id:26,name:'Raichu'},{id:58,name:'Growlithe'},{id:66,name:'Machop'},
-    {id:93,name:'Haunter'},{id:125,name:'Electabuzz'},{id:126,name:'Magmar'},
-    {id:131,name:'Lapras'},{id:133,name:'Eevee'},
-  ],
-  rare: [
-    {id:3,name:'Venusaur'},{id:6,name:'Charizard'},{id:9,name:'Blastoise'},
-    {id:65,name:'Alakazam'},{id:68,name:'Machamp'},{id:94,name:'Gengar'},
-    {id:130,name:'Gyarados'},{id:149,name:'Dragonite'},{id:143,name:'Snorlax'},
-    {id:134,name:'Vaporeon'},{id:136,name:'Flareon'},{id:135,name:'Jolteon'},
+  crown: [
+    {tcgId:'base1-4',  name:'Charizard',  hp:120, imageUrl:T('base1',4)},
+    {tcgId:'base1-10', name:'Mewtwo',     hp:60,  imageUrl:T('base1',10)},
   ],
   ultraRare: [
-    {id:144,name:'Articuno'},{id:145,name:'Zapdos'},{id:146,name:'Moltres'},{id:151,name:'Mew'},
+    {tcgId:'base1-2',  name:'Blastoise',  hp:100, imageUrl:T('base1',2)},
+    {tcgId:'base1-6',  name:'Gyarados',   hp:100, imageUrl:T('base1',6)},
+    {tcgId:'base1-14', name:'Raichu',     hp:80,  imageUrl:T('base1',14)},
+    {tcgId:'base1-15', name:'Venusaur',   hp:100, imageUrl:T('base1',15)},
+    {tcgId:'base1-16', name:'Zapdos',     hp:90,  imageUrl:T('base1',16)},
+    {tcgId:'jungle-3', name:'Flareon',    hp:70,  imageUrl:T('jungle',3)},
+    {tcgId:'jungle-4', name:'Jolteon',    hp:70,  imageUrl:T('jungle',4)},
+    {tcgId:'jungle-11',name:'Snorlax',    hp:90,  imageUrl:T('jungle',11)},
+    {tcgId:'jungle-12',name:'Vaporeon',   hp:80,  imageUrl:T('jungle',12)},
+    {tcgId:'fossil-2', name:'Articuno',   hp:70,  imageUrl:T('fossil',2)},
+    {tcgId:'fossil-4', name:'Dragonite',  hp:100, imageUrl:T('fossil',4)},
+    {tcgId:'fossil-5', name:'Gengar',     hp:80,  imageUrl:T('fossil',5)},
+    {tcgId:'fossil-10',name:'Lapras',     hp:80,  imageUrl:T('fossil',10)},
+    {tcgId:'fossil-12',name:'Moltres',    hp:70,  imageUrl:T('fossil',12)},
   ],
-  crown: [
-    {id:150,name:'Mewtwo'},
+  rare: [
+    // Base Set holos
+    {tcgId:'base1-1',  name:'Alakazam',   hp:80,  imageUrl:T('base1',1)},
+    {tcgId:'base1-3',  name:'Chansey',    hp:120, imageUrl:T('base1',3)},
+    {tcgId:'base1-5',  name:'Clefairy',   hp:40,  imageUrl:T('base1',5)},
+    {tcgId:'base1-7',  name:'Hitmonchan', hp:70,  imageUrl:T('base1',7)},
+    {tcgId:'base1-8',  name:'Machamp',    hp:100, imageUrl:T('base1',8)},
+    {tcgId:'base1-9',  name:'Magneton',   hp:60,  imageUrl:T('base1',9)},
+    {tcgId:'base1-11', name:'Nidoking',   hp:90,  imageUrl:T('base1',11)},
+    {tcgId:'base1-12', name:'Ninetales',  hp:80,  imageUrl:T('base1',12)},
+    {tcgId:'base1-13', name:'Poliwrath',  hp:90,  imageUrl:T('base1',13)},
+    // Base Set non-holo rares
+    {tcgId:'base1-17', name:'Beedrill',   hp:80,  imageUrl:T('base1',17)},
+    {tcgId:'base1-18', name:'Dragonair',  hp:80,  imageUrl:T('base1',18)},
+    {tcgId:'base1-19', name:'Dugtrio',    hp:70,  imageUrl:T('base1',19)},
+    {tcgId:'base1-20', name:'Electabuzz', hp:70,  imageUrl:T('base1',20)},
+    {tcgId:'base1-21', name:'Electrode',  hp:80,  imageUrl:T('base1',21)},
+    {tcgId:'base1-22', name:'Pidgeotto',  hp:60,  imageUrl:T('base1',22)},
+    // Jungle holos
+    {tcgId:'jungle-1', name:'Clefable',   hp:70,  imageUrl:T('jungle',1)},
+    {tcgId:'jungle-2', name:'Electrode',  hp:90,  imageUrl:T('jungle',2)},
+    {tcgId:'jungle-5', name:'Kangaskhan', hp:90,  imageUrl:T('jungle',5)},
+    {tcgId:'jungle-6', name:'Mr. Mime',   hp:40,  imageUrl:T('jungle',6)},
+    {tcgId:'jungle-7', name:'Nidoqueen',  hp:90,  imageUrl:T('jungle',7)},
+    {tcgId:'jungle-8', name:'Pidgeot',    hp:80,  imageUrl:T('jungle',8)},
+    {tcgId:'jungle-9', name:'Pinsir',     hp:60,  imageUrl:T('jungle',9)},
+    {tcgId:'jungle-10',name:'Scyther',    hp:70,  imageUrl:T('jungle',10)},
+    {tcgId:'jungle-13',name:'Venomoth',   hp:70,  imageUrl:T('jungle',13)},
+    {tcgId:'jungle-14',name:'Victreebel', hp:80,  imageUrl:T('jungle',14)},
+    {tcgId:'jungle-15',name:'Vileplume',  hp:80,  imageUrl:T('jungle',15)},
+    {tcgId:'jungle-16',name:'Wigglytuff', hp:80,  imageUrl:T('jungle',16)},
+    // Fossil holos
+    {tcgId:'fossil-1', name:'Aerodactyl', hp:60,  imageUrl:T('fossil',1)},
+    {tcgId:'fossil-3', name:'Ditto',      hp:50,  imageUrl:T('fossil',3)},
+    {tcgId:'fossil-6', name:'Haunter',    hp:50,  imageUrl:T('fossil',6)},
+    {tcgId:'fossil-7', name:'Hitmonlee',  hp:60,  imageUrl:T('fossil',7)},
+    {tcgId:'fossil-8', name:'Hypno',      hp:90,  imageUrl:T('fossil',8)},
+    {tcgId:'fossil-9', name:'Kabutops',   hp:60,  imageUrl:T('fossil',9)},
+    {tcgId:'fossil-11',name:'Magneton',   hp:80,  imageUrl:T('fossil',11)},
+    {tcgId:'fossil-13',name:'Muk',        hp:70,  imageUrl:T('fossil',13)},
+    {tcgId:'fossil-14',name:'Raichu',     hp:90,  imageUrl:T('fossil',14)},
+    {tcgId:'fossil-15',name:'Zapdos',     hp:80,  imageUrl:T('fossil',15)},
+  ],
+  uncommon: [
+    // Base Set uncommons
+    {tcgId:'base1-23', name:'Arcanine',   hp:100, imageUrl:T('base1',23)},
+    {tcgId:'base1-24', name:'Charmeleon', hp:80,  imageUrl:T('base1',24)},
+    {tcgId:'base1-25', name:'Dewgong',    hp:80,  imageUrl:T('base1',25)},
+    {tcgId:'base1-26', name:'Dratini',    hp:40,  imageUrl:T('base1',26)},
+    {tcgId:'base1-27', name:"Farfetch'd", hp:50,  imageUrl:T('base1',27)},
+    {tcgId:'base1-28', name:'Growlithe',  hp:60,  imageUrl:T('base1',28)},
+    {tcgId:'base1-29', name:'Haunter',    hp:60,  imageUrl:T('base1',29)},
+    {tcgId:'base1-30', name:'Ivysaur',    hp:60,  imageUrl:T('base1',30)},
+    {tcgId:'base1-31', name:'Jynx',       hp:70,  imageUrl:T('base1',31)},
+    {tcgId:'base1-32', name:'Kadabra',    hp:60,  imageUrl:T('base1',32)},
+    {tcgId:'base1-33', name:'Kakuna',     hp:80,  imageUrl:T('base1',33)},
+    {tcgId:'base1-34', name:'Machoke',    hp:80,  imageUrl:T('base1',34)},
+    {tcgId:'base1-35', name:'Magikarp',   hp:30,  imageUrl:T('base1',35)},
+    {tcgId:'base1-36', name:'Magmar',     hp:50,  imageUrl:T('base1',36)},
+    {tcgId:'base1-37', name:'Nidorino',   hp:60,  imageUrl:T('base1',37)},
+    {tcgId:'base1-38', name:'Poliwhirl',  hp:60,  imageUrl:T('base1',38)},
+    {tcgId:'base1-39', name:'Porygon',    hp:30,  imageUrl:T('base1',39)},
+    {tcgId:'base1-40', name:'Raticate',   hp:60,  imageUrl:T('base1',40)},
+    {tcgId:'base1-41', name:'Seel',       hp:60,  imageUrl:T('base1',41)},
+    {tcgId:'base1-42', name:'Wartortle',  hp:70,  imageUrl:T('base1',42)},
+    // Jungle uncommons
+    {tcgId:'jungle-33',name:'Butterfree', hp:70,  imageUrl:T('jungle',33)},
+    {tcgId:'jungle-34',name:'Dodrio',     hp:70,  imageUrl:T('jungle',34)},
+    {tcgId:'jungle-35',name:'Exeggutor',  hp:80,  imageUrl:T('jungle',35)},
+    {tcgId:'jungle-36',name:'Fearow',     hp:70,  imageUrl:T('jungle',36)},
+    {tcgId:'jungle-37',name:'Gloom',      hp:60,  imageUrl:T('jungle',37)},
+    {tcgId:'jungle-38',name:'Lickitung',  hp:90,  imageUrl:T('jungle',38)},
+    {tcgId:'jungle-39',name:'Marowak',    hp:60,  imageUrl:T('jungle',39)},
+    {tcgId:'jungle-40',name:'Nidorina',   hp:70,  imageUrl:T('jungle',40)},
+    {tcgId:'jungle-41',name:'Parasect',   hp:60,  imageUrl:T('jungle',41)},
+    {tcgId:'jungle-42',name:'Persian',    hp:70,  imageUrl:T('jungle',42)},
+    {tcgId:'jungle-43',name:'Primeape',   hp:70,  imageUrl:T('jungle',43)},
+    {tcgId:'jungle-44',name:'Rapidash',   hp:70,  imageUrl:T('jungle',44)},
+    {tcgId:'jungle-45',name:'Rhydon',     hp:100, imageUrl:T('jungle',45)},
+    {tcgId:'jungle-46',name:'Seaking',    hp:70,  imageUrl:T('jungle',46)},
+    {tcgId:'jungle-47',name:'Tauros',     hp:60,  imageUrl:T('jungle',47)},
+    {tcgId:'jungle-48',name:'Weepinbell', hp:70,  imageUrl:T('jungle',48)},
+    // Fossil uncommons
+    {tcgId:'fossil-31',name:'Arbok',      hp:60,  imageUrl:T('fossil',31)},
+    {tcgId:'fossil-32',name:'Cloyster',   hp:50,  imageUrl:T('fossil',32)},
+    {tcgId:'fossil-33',name:'Gastly',     hp:50,  imageUrl:T('fossil',33)},
+    {tcgId:'fossil-34',name:'Golbat',     hp:60,  imageUrl:T('fossil',34)},
+    {tcgId:'fossil-35',name:'Golduck',    hp:70,  imageUrl:T('fossil',35)},
+    {tcgId:'fossil-36',name:'Golem',      hp:80,  imageUrl:T('fossil',36)},
+    {tcgId:'fossil-37',name:'Graveler',   hp:60,  imageUrl:T('fossil',37)},
+    {tcgId:'fossil-38',name:'Kingler',    hp:60,  imageUrl:T('fossil',38)},
+    {tcgId:'fossil-39',name:'Magmar',     hp:70,  imageUrl:T('fossil',39)},
+    {tcgId:'fossil-40',name:'Omastar',    hp:70,  imageUrl:T('fossil',40)},
+    {tcgId:'fossil-41',name:'Sandslash',  hp:70,  imageUrl:T('fossil',41)},
+    {tcgId:'fossil-42',name:'Seadra',     hp:60,  imageUrl:T('fossil',42)},
+    {tcgId:'fossil-43',name:'Slowbro',    hp:60,  imageUrl:T('fossil',43)},
+    {tcgId:'fossil-44',name:'Tentacruel', hp:60,  imageUrl:T('fossil',44)},
+    {tcgId:'fossil-45',name:'Weezing',    hp:60,  imageUrl:T('fossil',45)},
+  ],
+  common: [
+    // Base Set commons
+    {tcgId:'base1-43', name:'Abra',       hp:30,  imageUrl:T('base1',43)},
+    {tcgId:'base1-44', name:'Bulbasaur',  hp:40,  imageUrl:T('base1',44)},
+    {tcgId:'base1-45', name:'Caterpie',   hp:40,  imageUrl:T('base1',45)},
+    {tcgId:'base1-46', name:'Charmander', hp:50,  imageUrl:T('base1',46)},
+    {tcgId:'base1-47', name:'Diglett',    hp:30,  imageUrl:T('base1',47)},
+    {tcgId:'base1-48', name:'Doduo',      hp:50,  imageUrl:T('base1',48)},
+    {tcgId:'base1-49', name:'Drowzee',    hp:50,  imageUrl:T('base1',49)},
+    {tcgId:'base1-50', name:'Gastly',     hp:30,  imageUrl:T('base1',50)},
+    {tcgId:'base1-51', name:'Koffing',    hp:50,  imageUrl:T('base1',51)},
+    {tcgId:'base1-52', name:'Machop',     hp:50,  imageUrl:T('base1',52)},
+    {tcgId:'base1-53', name:'Magnemite',  hp:40,  imageUrl:T('base1',53)},
+    {tcgId:'base1-54', name:'Metapod',    hp:70,  imageUrl:T('base1',54)},
+    {tcgId:'base1-55', name:'Nidoran M',  hp:40,  imageUrl:T('base1',55)},
+    {tcgId:'base1-56', name:'Onix',       hp:90,  imageUrl:T('base1',56)},
+    {tcgId:'base1-57', name:'Pidgey',     hp:40,  imageUrl:T('base1',57)},
+    {tcgId:'base1-58', name:'Pikachu',    hp:40,  imageUrl:T('base1',58)},
+    {tcgId:'base1-59', name:'Poliwag',    hp:40,  imageUrl:T('base1',59)},
+    {tcgId:'base1-60', name:'Ponyta',     hp:40,  imageUrl:T('base1',60)},
+    {tcgId:'base1-61', name:'Rattata',    hp:30,  imageUrl:T('base1',61)},
+    {tcgId:'base1-62', name:'Sandshrew',  hp:40,  imageUrl:T('base1',62)},
+    {tcgId:'base1-63', name:'Squirtle',   hp:40,  imageUrl:T('base1',63)},
+    {tcgId:'base1-64', name:'Starmie',    hp:60,  imageUrl:T('base1',64)},
+    {tcgId:'base1-65', name:'Staryu',     hp:40,  imageUrl:T('base1',65)},
+    {tcgId:'base1-66', name:'Tangela',    hp:50,  imageUrl:T('base1',66)},
+    {tcgId:'base1-67', name:'Voltorb',    hp:40,  imageUrl:T('base1',67)},
+    {tcgId:'base1-68', name:'Vulpix',     hp:50,  imageUrl:T('base1',68)},
+    {tcgId:'base1-69', name:'Weedle',     hp:40,  imageUrl:T('base1',69)},
+    // Jungle commons
+    {tcgId:'jungle-49',name:'Bellsprout', hp:40,  imageUrl:T('jungle',49)},
+    {tcgId:'jungle-50',name:'Cubone',     hp:40,  imageUrl:T('jungle',50)},
+    {tcgId:'jungle-51',name:'Eevee',      hp:50,  imageUrl:T('jungle',51)},
+    {tcgId:'jungle-52',name:'Exeggcute',  hp:50,  imageUrl:T('jungle',52)},
+    {tcgId:'jungle-53',name:'Goldeen',    hp:40,  imageUrl:T('jungle',53)},
+    {tcgId:'jungle-54',name:'Jigglypuff', hp:60,  imageUrl:T('jungle',54)},
+    {tcgId:'jungle-55',name:'Mankey',     hp:30,  imageUrl:T('jungle',55)},
+    {tcgId:'jungle-56',name:'Meowth',     hp:50,  imageUrl:T('jungle',56)},
+    {tcgId:'jungle-57',name:'Nidoran F',  hp:60,  imageUrl:T('jungle',57)},
+    {tcgId:'jungle-58',name:'Oddish',     hp:50,  imageUrl:T('jungle',58)},
+    {tcgId:'jungle-59',name:'Paras',      hp:40,  imageUrl:T('jungle',59)},
+    {tcgId:'jungle-60',name:'Pikachu',    hp:50,  imageUrl:T('jungle',60)},
+    {tcgId:'jungle-61',name:'Rhyhorn',    hp:70,  imageUrl:T('jungle',61)},
+    {tcgId:'jungle-62',name:'Spearow',    hp:50,  imageUrl:T('jungle',62)},
+    {tcgId:'jungle-63',name:'Venonat',    hp:40,  imageUrl:T('jungle',63)},
+    // Fossil commons
+    {tcgId:'fossil-46',name:'Ekans',      hp:40,  imageUrl:T('fossil',46)},
+    {tcgId:'fossil-47',name:'Geodude',    hp:50,  imageUrl:T('fossil',47)},
+    {tcgId:'fossil-48',name:'Grimer',     hp:50,  imageUrl:T('fossil',48)},
+    {tcgId:'fossil-49',name:'Horsea',     hp:40,  imageUrl:T('fossil',49)},
+    {tcgId:'fossil-50',name:'Kabuto',     hp:30,  imageUrl:T('fossil',50)},
+    {tcgId:'fossil-51',name:'Krabby',     hp:50,  imageUrl:T('fossil',51)},
+    {tcgId:'fossil-52',name:'Omanyte',    hp:40,  imageUrl:T('fossil',52)},
+    {tcgId:'fossil-53',name:'Psyduck',    hp:50,  imageUrl:T('fossil',53)},
+    {tcgId:'fossil-54',name:'Shellder',   hp:50,  imageUrl:T('fossil',54)},
+    {tcgId:'fossil-55',name:'Slowpoke',   hp:50,  imageUrl:T('fossil',55)},
+    {tcgId:'fossil-56',name:'Tentacool',  hp:30,  imageUrl:T('fossil',56)},
+    {tcgId:'fossil-57',name:'Zubat',      hp:40,  imageUrl:T('fossil',57)},
   ],
 };
 
@@ -109,15 +265,16 @@ function rollMiniPack(count) {
   while (cards.length < count && attempts < 200) {
     attempts++;
     const rarity  = pickRarity();
-    const pokemon = pickFromPool(rarity);
-    const key     = `${rarity}-${pokemon.id}`;
-    if (!used.has(key) || POKEMON_POOL[rarity].length === 1) {
-      used.add(key);
+    const pool    = POKEMON_POOL[rarity];
+    const pokemon = pool[Math.floor(Math.random() * pool.length)];
+    if (!used.has(pokemon.tcgId) || pool.length === 1) {
+      used.add(pokemon.tcgId);
       cards.push(enrichCard({
-        id:    pokemon.id,
-        name:  pokemon.name,
+        tcgId:    pokemon.tcgId,
+        name:     pokemon.name,
         rarity,
-        hp:    randomInt(...RARITY_HP[rarity]),
+        hp:       pokemon.hp,
+        imageUrl: pokemon.imageUrl,
       }));
     }
   }
@@ -235,9 +392,9 @@ async function prefetchImages(cards) {
     new Promise(r => {
       const img = new Image();
       img.onload = img.onerror = r;
-      img.src = getSpriteUrl(c.id);
+      img.src = c.imageUrl || getSpriteUrl(c.id);
     }),
-    timeout(5000), // max 5s per image
+    timeout(6000),
   ])));
 }
 
@@ -261,18 +418,31 @@ function buildCardElement(card, isFlipped = false) {
 
   const front = document.createElement('div');
   front.className = 'card-face card-front';
-  front.dataset.rarity = card.rarityCSS;
-  front.innerHTML = `
-    <div class="card-header">
-      <span class="card-pokemon-name">${card.name}</span>
-      <span class="card-hp">${card.hp}&nbsp;HP</span>
-    </div>
-    <div class="card-image-area">
-      <img class="card-pokemon-image" src="${getSpriteUrl(card.id)}" alt="${card.name}" draggable="false" onerror="this.style.opacity='0.3'"/>
-    </div>
-    <div class="card-footer">
-      <div class="card-rarity-indicator" data-rarity="${card.rarityCSS}">${card.rarityLabel}</div>
-    </div>`;
+  front.dataset.rarity = card.rarityCSS || RARITY_CSS[card.rarity] || 'common';
+
+  if (card.imageUrl) {
+    // Real TCG card image
+    const img = document.createElement('img');
+    img.className = 'card-tcg-img';
+    img.src = card.imageUrl;
+    img.alt = card.name;
+    img.draggable = false;
+    img.onerror = () => { img.style.opacity = '0.3'; };
+    front.appendChild(img);
+  } else {
+    // Legacy fallback for old collection cards
+    front.innerHTML = `
+      <div class="card-header">
+        <span class="card-pokemon-name">${card.name}</span>
+        <span class="card-hp">${card.hp}&nbsp;HP</span>
+      </div>
+      <div class="card-image-area">
+        <img class="card-pokemon-image" src="${getSpriteUrl(card.id)}" alt="${card.name}" draggable="false" onerror="this.style.opacity='0.3'"/>
+      </div>
+      <div class="card-footer">
+        <div class="card-rarity-indicator" data-rarity="${card.rarityCSS}">${card.rarityLabel}</div>
+      </div>`;
+  }
 
   inner.appendChild(back);
   inner.appendChild(front);
@@ -853,13 +1023,139 @@ async function submitCurrentScore() {
 // AVATAR PICKER
 // ============================================================
 
-// Flat list of all pokemon sorted by rarity for picker
-const ALL_POKEMON_FOR_PICKER = [
-  ...POKEMON_POOL.crown.map(p    => ({...p, rarity:'crown',    rarityCSS:'crown'})),
-  ...POKEMON_POOL.ultraRare.map(p => ({...p, rarity:'ultraRare', rarityCSS:'ultra-rare'})),
-  ...POKEMON_POOL.rare.map(p     => ({...p, rarity:'rare',      rarityCSS:'rare'})),
-  ...POKEMON_POOL.uncommon.map(p  => ({...p, rarity:'uncommon',  rarityCSS:'uncommon'})),
-  ...POKEMON_POOL.common.map(p   => ({...p, rarity:'common',    rarityCSS:'common'})),
+// Avatar picker uses PokéAPI Pokedex IDs (separate from TCG card pool)
+const AVATAR_POKEMON = [
+  {id:150,name:'Mewtwo',     rarityCSS:'crown'},
+  {id:6,  name:'Charizard',  rarityCSS:'crown'},
+  {id:9,  name:'Blastoise',  rarityCSS:'ultra-rare'},
+  {id:3,  name:'Venusaur',   rarityCSS:'ultra-rare'},
+  {id:130,name:'Gyarados',   rarityCSS:'ultra-rare'},
+  {id:26, name:'Raichu',     rarityCSS:'ultra-rare'},
+  {id:145,name:'Zapdos',     rarityCSS:'ultra-rare'},
+  {id:144,name:'Articuno',   rarityCSS:'ultra-rare'},
+  {id:146,name:'Moltres',    rarityCSS:'ultra-rare'},
+  {id:149,name:'Dragonite',  rarityCSS:'ultra-rare'},
+  {id:94, name:'Gengar',     rarityCSS:'ultra-rare'},
+  {id:131,name:'Lapras',     rarityCSS:'ultra-rare'},
+  {id:136,name:'Flareon',    rarityCSS:'ultra-rare'},
+  {id:135,name:'Jolteon',    rarityCSS:'ultra-rare'},
+  {id:143,name:'Snorlax',    rarityCSS:'ultra-rare'},
+  {id:134,name:'Vaporeon',   rarityCSS:'ultra-rare'},
+  {id:65, name:'Alakazam',   rarityCSS:'rare'},
+  {id:113,name:'Chansey',    rarityCSS:'rare'},
+  {id:35, name:'Clefairy',   rarityCSS:'rare'},
+  {id:107,name:'Hitmonchan', rarityCSS:'rare'},
+  {id:68, name:'Machamp',    rarityCSS:'rare'},
+  {id:82, name:'Magneton',   rarityCSS:'rare'},
+  {id:34, name:'Nidoking',   rarityCSS:'rare'},
+  {id:38, name:'Ninetales',  rarityCSS:'rare'},
+  {id:62, name:'Poliwrath',  rarityCSS:'rare'},
+  {id:36, name:'Clefable',   rarityCSS:'rare'},
+  {id:101,name:'Electrode',  rarityCSS:'rare'},
+  {id:115,name:'Kangaskhan', rarityCSS:'rare'},
+  {id:122,name:'Mr. Mime',   rarityCSS:'rare'},
+  {id:31, name:'Nidoqueen',  rarityCSS:'rare'},
+  {id:18, name:'Pidgeot',    rarityCSS:'rare'},
+  {id:127,name:'Pinsir',     rarityCSS:'rare'},
+  {id:123,name:'Scyther',    rarityCSS:'rare'},
+  {id:49, name:'Venomoth',   rarityCSS:'rare'},
+  {id:71, name:'Victreebel', rarityCSS:'rare'},
+  {id:45, name:'Vileplume',  rarityCSS:'rare'},
+  {id:40, name:'Wigglytuff', rarityCSS:'rare'},
+  {id:15, name:'Beedrill',   rarityCSS:'rare'},
+  {id:148,name:'Dragonair',  rarityCSS:'rare'},
+  {id:51, name:'Dugtrio',    rarityCSS:'rare'},
+  {id:125,name:'Electabuzz', rarityCSS:'rare'},
+  {id:17, name:'Pidgeotto',  rarityCSS:'rare'},
+  {id:59, name:'Arcanine',   rarityCSS:'uncommon'},
+  {id:5,  name:'Charmeleon', rarityCSS:'uncommon'},
+  {id:87, name:'Dewgong',    rarityCSS:'uncommon'},
+  {id:147,name:'Dratini',    rarityCSS:'uncommon'},
+  {id:83, name:"Farfetch'd", rarityCSS:'uncommon'},
+  {id:58, name:'Growlithe',  rarityCSS:'uncommon'},
+  {id:93, name:'Haunter',    rarityCSS:'uncommon'},
+  {id:2,  name:'Ivysaur',    rarityCSS:'uncommon'},
+  {id:124,name:'Jynx',       rarityCSS:'uncommon'},
+  {id:64, name:'Kadabra',    rarityCSS:'uncommon'},
+  {id:14, name:'Kakuna',     rarityCSS:'uncommon'},
+  {id:67, name:'Machoke',    rarityCSS:'uncommon'},
+  {id:129,name:'Magikarp',   rarityCSS:'uncommon'},
+  {id:126,name:'Magmar',     rarityCSS:'uncommon'},
+  {id:33, name:'Nidorino',   rarityCSS:'uncommon'},
+  {id:61, name:'Poliwhirl',  rarityCSS:'uncommon'},
+  {id:137,name:'Porygon',    rarityCSS:'uncommon'},
+  {id:20, name:'Raticate',   rarityCSS:'uncommon'},
+  {id:86, name:'Seel',       rarityCSS:'uncommon'},
+  {id:8,  name:'Wartortle',  rarityCSS:'uncommon'},
+  {id:12, name:'Butterfree', rarityCSS:'uncommon'},
+  {id:85, name:'Dodrio',     rarityCSS:'uncommon'},
+  {id:103,name:'Exeggutor',  rarityCSS:'uncommon'},
+  {id:22, name:'Fearow',     rarityCSS:'uncommon'},
+  {id:44, name:'Gloom',      rarityCSS:'uncommon'},
+  {id:108,name:'Lickitung',  rarityCSS:'uncommon'},
+  {id:105,name:'Marowak',    rarityCSS:'uncommon'},
+  {id:30, name:'Nidorina',   rarityCSS:'uncommon'},
+  {id:47, name:'Parasect',   rarityCSS:'uncommon'},
+  {id:53, name:'Persian',    rarityCSS:'uncommon'},
+  {id:57, name:'Primeape',   rarityCSS:'uncommon'},
+  {id:78, name:'Rapidash',   rarityCSS:'uncommon'},
+  {id:112,name:'Rhydon',     rarityCSS:'uncommon'},
+  {id:119,name:'Seaking',    rarityCSS:'uncommon'},
+  {id:128,name:'Tauros',     rarityCSS:'uncommon'},
+  {id:70, name:'Weepinbell', rarityCSS:'uncommon'},
+  {id:63, name:'Abra',       rarityCSS:'common'},
+  {id:1,  name:'Bulbasaur',  rarityCSS:'common'},
+  {id:10, name:'Caterpie',   rarityCSS:'common'},
+  {id:4,  name:'Charmander', rarityCSS:'common'},
+  {id:50, name:'Diglett',    rarityCSS:'common'},
+  {id:84, name:'Doduo',      rarityCSS:'common'},
+  {id:96, name:'Drowzee',    rarityCSS:'common'},
+  {id:92, name:'Gastly',     rarityCSS:'common'},
+  {id:109,name:'Koffing',    rarityCSS:'common'},
+  {id:66, name:'Machop',     rarityCSS:'common'},
+  {id:81, name:'Magnemite',  rarityCSS:'common'},
+  {id:11, name:'Metapod',    rarityCSS:'common'},
+  {id:32, name:'Nidoran M',  rarityCSS:'common'},
+  {id:95, name:'Onix',       rarityCSS:'common'},
+  {id:16, name:'Pidgey',     rarityCSS:'common'},
+  {id:25, name:'Pikachu',    rarityCSS:'common'},
+  {id:60, name:'Poliwag',    rarityCSS:'common'},
+  {id:77, name:'Ponyta',     rarityCSS:'common'},
+  {id:19, name:'Rattata',    rarityCSS:'common'},
+  {id:27, name:'Sandshrew',  rarityCSS:'common'},
+  {id:7,  name:'Squirtle',   rarityCSS:'common'},
+  {id:121,name:'Starmie',    rarityCSS:'common'},
+  {id:120,name:'Staryu',     rarityCSS:'common'},
+  {id:114,name:'Tangela',    rarityCSS:'common'},
+  {id:100,name:'Voltorb',    rarityCSS:'common'},
+  {id:37, name:'Vulpix',     rarityCSS:'common'},
+  {id:13, name:'Weedle',     rarityCSS:'common'},
+  {id:69, name:'Bellsprout', rarityCSS:'common'},
+  {id:104,name:'Cubone',     rarityCSS:'common'},
+  {id:133,name:'Eevee',      rarityCSS:'common'},
+  {id:102,name:'Exeggcute',  rarityCSS:'common'},
+  {id:118,name:'Goldeen',    rarityCSS:'common'},
+  {id:39, name:'Jigglypuff', rarityCSS:'common'},
+  {id:56, name:'Mankey',     rarityCSS:'common'},
+  {id:52, name:'Meowth',     rarityCSS:'common'},
+  {id:29, name:'Nidoran F',  rarityCSS:'common'},
+  {id:43, name:'Oddish',     rarityCSS:'common'},
+  {id:46, name:'Paras',      rarityCSS:'common'},
+  {id:111,name:'Rhyhorn',    rarityCSS:'common'},
+  {id:21, name:'Spearow',    rarityCSS:'common'},
+  {id:48, name:'Venonat',    rarityCSS:'common'},
+  {id:23, name:'Ekans',      rarityCSS:'common'},
+  {id:74, name:'Geodude',    rarityCSS:'common'},
+  {id:88, name:'Grimer',     rarityCSS:'common'},
+  {id:116,name:'Horsea',     rarityCSS:'common'},
+  {id:140,name:'Kabuto',     rarityCSS:'common'},
+  {id:98, name:'Krabby',     rarityCSS:'common'},
+  {id:138,name:'Omanyte',    rarityCSS:'common'},
+  {id:54, name:'Psyduck',    rarityCSS:'common'},
+  {id:90, name:'Shellder',   rarityCSS:'common'},
+  {id:79, name:'Slowpoke',   rarityCSS:'common'},
+  {id:72, name:'Tentacool',  rarityCSS:'common'},
+  {id:41, name:'Zubat',      rarityCSS:'common'},
 ];
 
 function getAvatarId() {
@@ -897,7 +1193,7 @@ function applyAvatarToEl(el, avatarId, fallbackLetter) {
   const currId = getAvatarId();
 
   grid.innerHTML = '';
-  ALL_POKEMON_FOR_PICKER.forEach(pokemon => {
+  AVATAR_POKEMON.forEach(pokemon => {
     const item = document.createElement('div');
     item.className = 'avatar-picker-item' + (pokemon.id === currId ? ' selected' : '');
     item.dataset.id = pokemon.id;
