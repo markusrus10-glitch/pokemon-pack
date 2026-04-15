@@ -104,8 +104,24 @@ const KEY_AVATAR        = 'pokemon_avatar_v1';
 const KEY_OLD_PACK      = 'pokemon_pack_v1';
 const KEY_MY_LISTINGS   = 'pokemon_my_listings_v1';
 
-// Leaderboard
-const JSONBLOB_URL = 'https://jsonblob.com/api/jsonBlob/019d7b99-ed6c-728b-b65c-a6dab98ec4bb';
+// Server API (same-origin — served by our own Node.js server)
+const API_URL = '';
+
+// Telegram user ID (set in initTelegram, fallback to device-local ID)
+let _telegramId = null;
+
+function getTelegramId() {
+  if (_telegramId) return _telegramId;
+  try {
+    const user = Telegram?.WebApp?.initDataUnsafe?.user;
+    if (user?.id) { _telegramId = String(user.id); return _telegramId; }
+  } catch {}
+  // Dev / browser fallback
+  let id = localStorage.getItem('pokemon_device_id_v1');
+  if (!id) { id = 'dev_' + Date.now().toString(36); localStorage.setItem('pokemon_device_id_v1', id); }
+  _telegramId = id;
+  return _telegramId;
+}
 
 const DAILY_INTERVAL_MS = 24 * 60 * 60 * 1000;
 
@@ -254,35 +270,55 @@ function migrateOldData() {
 }
 
 // ============================================================
-// LEADERBOARD
+// SERVER SYNC
 // ============================================================
 
-async function submitScore(name, score, cards) {
+async function saveFullState() {
   try {
-    const res = await fetch(JSONBLOB_URL);
-    if (!res.ok) return;
-    const data = await res.json();
-    const players  = Array.isArray(data.players)  ? data.players  : [];
-    const listings = Array.isArray(data.listings) ? data.listings : [];
-
-    const idx = players.findIndex(p => p.name === name);
-    const entry = { name, score, cards, updatedAt: new Date().toISOString() };
-    if (idx >= 0) players[idx] = entry;
-    else players.push(entry);
-
-    await fetch(JSONBLOB_URL, {
-      method: 'PUT',
+    const col   = getCollection();
+    const score = col.reduce((s, c) => s + (c.value || 0), 0);
+    await fetch(`${API_URL}/api/user/${getTelegramId()}`, {
+      method:  'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ players, listings }),
+      body: JSON.stringify({
+        username:    getUsername(),
+        coins:       getCoins(),
+        score,
+        collection:  col,
+        avatar_id:   getAvatarId(),
+        last_pack:   localStorage.getItem(KEY_LAST_PACK)   || null,
+        last_reward: localStorage.getItem(KEY_LAST_REWARD) || null,
+      }),
     });
   } catch {}
 }
 
+async function loadFromServer() {
+  try {
+    const res  = await fetch(`${API_URL}/api/user/${getTelegramId()}`);
+    if (!res.ok) return;
+    const data = await res.json();
+    if (!data) return; // new user — nothing to load
+    // Use server data if it has more cards (more complete)
+    const serverCol = Array.isArray(data.collection) ? data.collection : [];
+    if (serverCol.length >= getCollection().length) {
+      saveCollection(serverCol);
+      if ((data.coins || 0) > getCoins()) localStorage.setItem(KEY_COINS, String(data.coins));
+      if (data.avatar_id)  localStorage.setItem(KEY_AVATAR,      String(data.avatar_id));
+      if (data.last_pack)  localStorage.setItem(KEY_LAST_PACK,   data.last_pack);
+      if (data.last_reward) localStorage.setItem(KEY_LAST_REWARD, data.last_reward);
+      if (data.username)   localStorage.setItem(KEY_USERNAME,    data.username);
+    }
+  } catch {}
+}
+
+// ============================================================
+// LEADERBOARD
+// ============================================================
+
 async function fetchLeaderboard() {
-  const res = await fetch(JSONBLOB_URL);
-  const data = await res.json();
-  const players = Array.isArray(data.players) ? data.players : [];
-  return players.sort((a, b) => b.score - a.score).slice(0, 10);
+  const res = await fetch(`${API_URL}/api/leaderboard`);
+  return await res.json();
 }
 
 // ============================================================
@@ -913,65 +949,57 @@ function removeMyListingLocal(uid) {
 // ============================================================
 
 async function fetchListings() {
-  const res  = await fetch(JSONBLOB_URL);
+  const res = await fetch(`${API_URL}/api/market`);
+  if (!res.ok) return [];
   const data = await res.json();
-  return Array.isArray(data.listings) ? data.listings : [];
+  // Normalize: server uses seller_id/seller_name, UI uses sellerName
+  return data.map(l => ({ ...l, sellerName: l.seller_name }));
 }
 
 async function createListing(card, price) {
-  const res  = await fetch(JSONBLOB_URL);
-  const data = await res.json();
-  const players  = Array.isArray(data.players)  ? data.players  : [];
-  const listings = Array.isArray(data.listings) ? data.listings : [];
-
+  const uid = makeUid();
   const listing = {
-    uid:        makeUid(),
-    sellerName: getUsername(),
-    card:       { ...card },
-    price:      Math.max(1, Math.floor(Number(price))),
-    listedAt:   new Date().toISOString(),
+    uid,
+    seller_id:   getTelegramId(),
+    seller_name: getUsername(),
+    card:        { ...card },
+    price:       Math.max(1, Math.floor(Number(price))),
   };
-  listings.push(listing);
-
-  await fetch(JSONBLOB_URL, {
-    method: 'PUT',
+  await fetch(`${API_URL}/api/market`, {
+    method:  'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ players, listings }),
+    body:    JSON.stringify(listing),
   });
-  return listing;
+  return { ...listing, sellerName: listing.seller_name, listedAt: new Date().toISOString() };
 }
 
 async function removeListingRemote(uid) {
-  const res  = await fetch(JSONBLOB_URL);
-  const data = await res.json();
-  const players  = Array.isArray(data.players)  ? data.players  : [];
-  const listings = (Array.isArray(data.listings) ? data.listings : []).filter(l => l.uid !== uid);
-
-  await fetch(JSONBLOB_URL, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ players, listings }),
-  });
+  const res = await fetch(`${API_URL}/api/market/${uid}`, { method: 'DELETE' });
+  if (!res.ok) throw new Error('listing not found or already bought');
+  return await res.json();
 }
 
 async function buyListing(listing) {
   if (getCoins() < listing.price) return false;
-
-  await removeListingRemote(listing.uid);
-  removeMyListingLocal(listing.uid); // in case buyer == seller somehow
-
-  const newCoins = getCoins() - listing.price;
-  localStorage.setItem(KEY_COINS, String(newCoins));
-  addToCollection([enrichCard({ ...listing.card, uid: makeUid(), obtainedAt: new Date().toISOString() })]);
+  let data;
+  try {
+    data = await removeListingRemote(listing.uid);
+  } catch {
+    return false; // already bought by someone else
+  }
+  removeMyListingLocal(listing.uid);
+  localStorage.setItem(KEY_COINS, String(getCoins() - listing.price));
+  addToCollection([enrichCard({ ...(data.card || listing.card), uid: makeUid(), obtainedAt: new Date().toISOString() })]);
+  await saveFullState();
   haptic('medium');
   return true;
 }
 
 async function delistListing(listing) {
-  await removeListingRemote(listing.uid);
+  try { await removeListingRemote(listing.uid); } catch {}
   removeMyListingLocal(listing.uid);
-  // Return card to collection
   addToCollection([enrichCard({ ...listing.card, uid: makeUid(), obtainedAt: new Date().toISOString() })]);
+  await saveFullState();
   haptic('light');
 }
 
@@ -1191,11 +1219,7 @@ async function loadRatingScreen() {
 }
 
 async function submitCurrentScore() {
-  const col   = getCollection();
-  if (col.length === 0) return;
-  const name  = getUsername();
-  const score = col.reduce((s, c) => s + (c.value || 0), 0);
-  await submitScore(name, score, col.length);
+  await saveFullState();
 }
 
 // ============================================================
@@ -1434,6 +1458,9 @@ async function main() {
   initTelegram();
   initStarfield();
   migrateOldData();
+
+  // Load latest data from server (syncs across devices)
+  await loadFromServer();
 
   // Apply saved avatar on load
   const savedAvatar = getAvatarId();
