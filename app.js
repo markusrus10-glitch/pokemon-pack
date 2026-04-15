@@ -446,6 +446,12 @@ function showScreen(id, navTab) {
     el.classList.add('hidden');
   });
   const target = document.getElementById(`screen-${id}`);
+  if (!target) {
+    // Screen element missing — restore previous screen to avoid blank page
+    const prev = document.getElementById(`screen-${currentScreen}`);
+    if (prev) { prev.classList.remove('hidden'); prev.classList.add('active'); }
+    return;
+  }
   target.classList.remove('hidden');
   void target.offsetWidth;
   target.classList.add('active');
