@@ -1152,8 +1152,8 @@ function closeListModal() {
 async function confirmListing() {
   if (!listTargetCard) return;
 
-  const input   = document.getElementById('list-price-input');
-  const price   = parseInt(input.value, 10);
+  const input = document.getElementById('list-price-input');
+  const price = parseInt(input.value, 10);
   if (!price || price < 1) { input.focus(); return; }
 
   const btn = document.getElementById('btn-list-confirm');
@@ -1161,14 +1161,14 @@ async function confirmListing() {
   btn.textContent = '...';
 
   try {
-    // Remove card from collection first
+    // Create listing on server FIRST — only remove from collection if it succeeds
+    const listing = await createListing(listTargetCard, price);
+    addMyListingLocal(listing);
+
     const col = getCollection();
     const idx = col.findIndex(c => c.uid === listTargetCard.uid);
     if (idx !== -1) col.splice(idx, 1);
     saveCollection(col);
-
-    const listing = await createListing(listTargetCard, price);
-    addMyListingLocal(listing);
 
     haptic('medium');
     closeListModal();

@@ -8,7 +8,16 @@ const db   = new Database(path.join(__dirname, 'game.db'));
 const PORT = process.env.PORT || 3000;
 
 app.use(express.json({ limit: '4mb' }));
-app.use(express.static(path.join(__dirname, 'public')));
+
+// Block access to sensitive server files
+const BLOCKED = new Set(['/server.js', '/package.json', '/package-lock.json', '/setup.sh', '/game.db', '/.gitignore']);
+app.use((req, res, next) => {
+  if (BLOCKED.has(req.path)) return res.status(403).end();
+  next();
+});
+
+// Serve game files from repo root
+app.use(express.static(__dirname));
 
 // ── DB INIT ──────────────────────────────────────────────────
 db.exec(`
