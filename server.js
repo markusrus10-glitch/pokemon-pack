@@ -9,6 +9,18 @@ const PORT = process.env.PORT || 3000;
 
 app.use(express.json({ limit: '4mb' }));
 
+// CORS — Telegram iOS WebView sends preflight OPTIONS
+app.use((req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  if (req.method === 'OPTIONS') return res.status(204).end();
+  if (req.path.startsWith('/api')) {
+    console.log(`${req.method} ${req.path} ip=${req.headers['x-real-ip'] || req.ip}`);
+  }
+  next();
+});
+
 // Block access to sensitive server files
 const BLOCKED = new Set(['/server.js', '/package.json', '/package-lock.json', '/setup.sh', '/game.db', '/.gitignore']);
 app.use((req, res, next) => {
