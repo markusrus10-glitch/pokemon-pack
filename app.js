@@ -287,11 +287,12 @@ function clearPendingListings() {
 }
 
 async function saveFullState() {
+  const url = `${API_URL}/api/user/${getTelegramId()}`;
   try {
     const col     = getCollection();
     const score   = col.reduce((s, c) => s + (c.value || 0), 0);
     const pending = getPendingListings();
-    const res = await fetch(`${API_URL}/api/user/${getTelegramId()}`, {
+    const res = await fetch(url, {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -306,8 +307,10 @@ async function saveFullState() {
       }),
     });
     if (res.ok) { clearPendingListings(); return true; }
+    showToast(`✗ server ${res.status}`);
     return false;
   } catch (e) {
+    showToast(`✗ ${e?.message || 'fetch error'} | ${url}`);
     console.error('[saveFullState]', e?.message || e);
     return false;
   }
@@ -449,7 +452,7 @@ function showToast(msg, ms = 3000) {
   if (!el) {
     el = document.createElement('div');
     el.id = 'app-toast';
-    el.style.cssText = 'position:fixed;top:68px;left:50%;transform:translateX(-50%) translateZ(0);background:rgba(20,20,30,0.95);color:#fff;padding:10px 20px;border-radius:22px;z-index:9999;font-size:13px;pointer-events:none;transition:opacity 0.3s;white-space:nowrap;box-shadow:0 2px 12px rgba(0,0,0,0.5)';
+    el.style.cssText = 'position:fixed;bottom:110px;left:50%;transform:translateX(-50%);background:rgba(20,20,30,0.96);color:#fff;padding:12px 22px;border-radius:22px;z-index:99999;font-size:14px;pointer-events:none;transition:opacity 0.3s;white-space:nowrap;box-shadow:0 2px 16px rgba(0,0,0,0.6);max-width:90vw;text-align:center';
     document.body.appendChild(el);
   }
   el.textContent = msg;
@@ -815,7 +818,7 @@ function renderHomeScreen() {
     dbg.style.cssText = 'font-size:10px;color:rgba(255,255,255,0.4);text-align:center;padding:2px 8px';
     document.getElementById('screen-welcome').appendChild(dbg);
   }
-  dbg.textContent = `v25 ID:${getTelegramId()} cards:${collection.length} pending:${getPendingListings().length}`;
+  dbg.textContent = `v26 ID:${getTelegramId()} cards:${collection.length} pending:${getPendingListings().length}`;
 
   const nameEl = document.getElementById('home-trainer-name');
   const avatarEl = document.getElementById('home-avatar');
