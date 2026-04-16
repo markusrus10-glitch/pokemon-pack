@@ -299,16 +299,14 @@ async function loadFromServer() {
     if (!res.ok) return;
     const data = await res.json();
     if (!data) return; // new user — nothing to load
-    // Use server data if it has more cards (more complete)
+    // Always trust server as source of truth
     const serverCol = Array.isArray(data.collection) ? data.collection : [];
-    if (serverCol.length >= getCollection().length) {
-      saveCollection(serverCol);
-      if ((data.coins || 0) > getCoins()) localStorage.setItem(KEY_COINS, String(data.coins));
-      if (data.avatar_id)  localStorage.setItem(KEY_AVATAR,      String(data.avatar_id));
-      if (data.last_pack)  localStorage.setItem(KEY_LAST_PACK,   data.last_pack);
-      if (data.last_reward) localStorage.setItem(KEY_LAST_REWARD, data.last_reward);
-      if (data.username)   localStorage.setItem(KEY_USERNAME,    data.username);
-    }
+    saveCollection(serverCol);
+    localStorage.setItem(KEY_COINS, String(data.coins || 0));
+    if (data.avatar_id)   localStorage.setItem(KEY_AVATAR,      String(data.avatar_id));
+    if (data.last_pack)   localStorage.setItem(KEY_LAST_PACK,   data.last_pack);
+    if (data.last_reward) localStorage.setItem(KEY_LAST_REWARD, data.last_reward);
+    if (data.username)    localStorage.setItem(KEY_USERNAME,    data.username);
   } catch {}
 }
 
@@ -1060,6 +1058,7 @@ async function renderMarketScreen() {
   }
 
   const myName = getUsername();
+  const myId   = getTelegramId();
   const myCoins = getCoins();
 
   if (listings.length === 0) {
@@ -1070,13 +1069,15 @@ async function renderMarketScreen() {
   list.innerHTML = '';
   // Sort: own listings first, then by price
   const sorted = [...listings].sort((a, b) => {
-    if ((a.sellerName === myName) !== (b.sellerName === myName)) return a.sellerName === myName ? -1 : 1;
+    const aMine = a.seller_id === myId || a.sellerName === myName;
+    const bMine = b.seller_id === myId || b.sellerName === myName;
+    if (aMine !== bMine) return aMine ? -1 : 1;
     return a.price - b.price;
   });
 
   sorted.forEach(listing => {
     const card   = listing.card;
-    const isMine = listing.sellerName === myName;
+    const isMine = listing.seller_id === myId || listing.sellerName === myName;
 
     const row = document.createElement('div');
     row.className = 'market-row' + (isMine ? ' is-mine' : '');
