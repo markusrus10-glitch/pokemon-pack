@@ -7,7 +7,8 @@ const app  = express();
 const db   = new Database(path.join(__dirname, 'game.db'));
 const PORT = process.env.PORT || 3000;
 
-app.use(express.json({ limit: '4mb' }));
+// Accept both application/json and text/plain (iOS workaround — text/plain avoids CORS preflight)
+app.use(express.json({ limit: '4mb', type: ['application/json', 'text/plain'] }));
 
 // CORS — Telegram iOS WebView sends preflight OPTIONS
 app.use((req, res, next) => {
