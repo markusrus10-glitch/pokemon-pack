@@ -397,12 +397,18 @@ function buildProfileCardItem(card, onClick) {
   const safe = enrichCard(card); // ensure value/uid/etc are always set
   const item = document.createElement('div');
   item.className = 'profile-card-item';
+  item.style.position = 'relative';
   item.appendChild(buildCardElement(safe, true));
   const badge = document.createElement('div');
   badge.className = 'card-value-badge';
   badge.textContent = `🪙 ${safe.value.toLocaleString()}`;
   item.appendChild(badge);
-  item.addEventListener('click', () => onClick(safe));
+  // Transparent overlay fixes iOS/Telegram tap issues with 3D CSS transforms
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:absolute;inset:0;z-index:10;cursor:pointer;-webkit-tap-highlight-color:transparent';
+  overlay.addEventListener('click', () => onClick(safe));
+  overlay.addEventListener('touchend', (e) => { e.preventDefault(); onClick(safe); });
+  item.appendChild(overlay);
   return item;
 }
 
