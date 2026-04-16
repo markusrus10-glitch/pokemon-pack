@@ -394,14 +394,15 @@ function buildCardElement(card, isFlipped = false) {
 }
 
 function buildProfileCardItem(card, onClick) {
+  const safe = enrichCard(card); // ensure value/uid/etc are always set
   const item = document.createElement('div');
   item.className = 'profile-card-item';
-  item.appendChild(buildCardElement(card, true));
+  item.appendChild(buildCardElement(safe, true));
   const badge = document.createElement('div');
   badge.className = 'card-value-badge';
-  badge.textContent = `🪙 ${card.value.toLocaleString()}`;
+  badge.textContent = `🪙 ${safe.value.toLocaleString()}`;
   item.appendChild(badge);
-  item.addEventListener('click', () => onClick(card));
+  item.addEventListener('click', () => onClick(safe));
   return item;
 }
 
