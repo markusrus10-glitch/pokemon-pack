@@ -299,14 +299,20 @@ async function loadFromServer() {
     if (!res.ok) return;
     const data = await res.json();
     if (!data) return; // new user — nothing to load
-    // Always trust server as source of truth
     const serverCol = Array.isArray(data.collection) ? data.collection : [];
-    saveCollection(serverCol);
-    localStorage.setItem(KEY_COINS, String(data.coins || 0));
-    if (data.avatar_id)   localStorage.setItem(KEY_AVATAR,      String(data.avatar_id));
-    if (data.last_pack)   localStorage.setItem(KEY_LAST_PACK,   data.last_pack);
-    if (data.last_reward) localStorage.setItem(KEY_LAST_REWARD, data.last_reward);
-    if (data.username)    localStorage.setItem(KEY_USERNAME,    data.username);
+    const localCol  = getCollection();
+    // Take whichever has more cards (prevents wiping local data)
+    if (serverCol.length >= localCol.length) {
+      saveCollection(serverCol);
+      localStorage.setItem(KEY_COINS, String(data.coins || 0));
+      if (data.avatar_id)   localStorage.setItem(KEY_AVATAR,      String(data.avatar_id));
+      if (data.last_pack)   localStorage.setItem(KEY_LAST_PACK,   data.last_pack);
+      if (data.last_reward) localStorage.setItem(KEY_LAST_REWARD, data.last_reward);
+      if (data.username)    localStorage.setItem(KEY_USERNAME,    data.username);
+    } else {
+      // Local has more cards — keep local but sync coins from server if server has more
+      if ((data.coins || 0) > getCoins()) localStorage.setItem(KEY_COINS, String(data.coins));
+    }
   } catch {}
 }
 
