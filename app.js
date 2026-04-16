@@ -388,21 +388,35 @@ function buildCardElement(card, isFlipped = false) {
 }
 
 function buildProfileCardItem(card, onClick) {
-  const safe = enrichCard(card); // ensure value/uid/etc are always set
+  const safe = enrichCard(card);
   const item = document.createElement('div');
   item.className = 'profile-card-item';
-  item.style.position = 'relative';
+
   item.appendChild(buildCardElement(safe, true));
+
   const badge = document.createElement('div');
   badge.className = 'card-value-badge';
   badge.textContent = `🪙 ${safe.value.toLocaleString()}`;
   item.appendChild(badge);
-  // Transparent overlay fixes iOS/Telegram tap issues with 3D CSS transforms
-  const overlay = document.createElement('div');
-  overlay.style.cssText = 'position:absolute;inset:0;z-index:10;cursor:pointer;-webkit-tap-highlight-color:transparent';
-  overlay.addEventListener('click', () => onClick(safe));
-  overlay.addEventListener('touchend', (e) => { e.preventDefault(); onClick(safe); });
-  item.appendChild(overlay);
+
+  // Sell button directly on card — no tap detection needed
+  const btnRow = document.createElement('div');
+  btnRow.className = 'card-btn-row';
+
+  const btnSell = document.createElement('button');
+  btnSell.className = 'btn-card-sell';
+  btnSell.textContent = 'Sell';
+  btnSell.addEventListener('click', (e) => { e.stopPropagation(); openSellModal(safe); });
+
+  const btnList = document.createElement('button');
+  btnList.className = 'btn-card-list';
+  btnList.textContent = '🛒 List';
+  btnList.addEventListener('click', (e) => { e.stopPropagation(); openListModal(safe); });
+
+  btnRow.appendChild(btnSell);
+  btnRow.appendChild(btnList);
+  item.appendChild(btnRow);
+
   return item;
 }
 
