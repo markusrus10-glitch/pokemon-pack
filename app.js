@@ -754,6 +754,16 @@ function renderHomeScreen() {
   const collection = getCollection();
   const coins = getCoins();
 
+  // DEBUG: show current ID and card count
+  let dbg = document.getElementById('dbg-info');
+  if (!dbg) {
+    dbg = document.createElement('div');
+    dbg.id = 'dbg-info';
+    dbg.style.cssText = 'font-size:10px;color:rgba(255,255,255,0.4);text-align:center;padding:2px 8px';
+    document.getElementById('screen-welcome').appendChild(dbg);
+  }
+  dbg.textContent = `ID:${getTelegramId()} cards:${collection.length} coins:${coins}`;
+
   const nameEl = document.getElementById('home-trainer-name');
   const avatarEl = document.getElementById('home-avatar');
   if (nameEl) nameEl.textContent = name;
