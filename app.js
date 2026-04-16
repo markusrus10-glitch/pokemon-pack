@@ -1060,6 +1060,8 @@ async function renderMarketScreen() {
   const myName = getUsername();
   const myId   = getTelegramId();
   const myCoins = getCoins();
+  const myListingUids = new Set(getMyListings().map(l => l.uid));
+  console.log('[Market] myId:', myId, 'myName:', myName, 'myListings:', [...myListingUids]);
 
   if (listings.length === 0) {
     list.innerHTML = '<div class="market-empty">No listings yet.<br>List cards from your profile!</div>';
@@ -1069,15 +1071,15 @@ async function renderMarketScreen() {
   list.innerHTML = '';
   // Sort: own listings first, then by price
   const sorted = [...listings].sort((a, b) => {
-    const aMine = a.seller_id === myId || a.sellerName === myName;
-    const bMine = b.seller_id === myId || b.sellerName === myName;
+    const aMine = a.seller_id === myId || a.sellerName === myName || myListingUids.has(a.uid);
+    const bMine = b.seller_id === myId || b.sellerName === myName || myListingUids.has(b.uid);
     if (aMine !== bMine) return aMine ? -1 : 1;
     return a.price - b.price;
   });
 
   sorted.forEach(listing => {
     const card   = listing.card;
-    const isMine = listing.seller_id === myId || listing.sellerName === myName;
+    const isMine = listing.seller_id === myId || listing.sellerName === myName || myListingUids.has(listing.uid);
 
     const row = document.createElement('div');
     row.className = 'market-row' + (isMine ? ' is-mine' : '');
