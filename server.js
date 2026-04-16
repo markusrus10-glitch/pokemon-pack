@@ -23,7 +23,7 @@ app.use(express.static(__dirname));
 db.exec(`
   CREATE TABLE IF NOT EXISTS users (
     telegram_id  TEXT PRIMARY KEY,
-    username     TEXT    NOT NULL DEFAULT 'Игрок',
+    username     TEXT    NOT NULL DEFAULT 'Trainer',
     coins        INTEGER NOT NULL DEFAULT 0,
     score        INTEGER NOT NULL DEFAULT 0,
     collection   TEXT    NOT NULL DEFAULT '[]',
@@ -69,7 +69,7 @@ app.post('/api/user/:id', (req, res) => {
   const b = req.body;
   stmtUpsertUser.run({
     telegram_id: req.params.id,
-    username:    String(b.username    || 'Игрок').slice(0, 64),
+    username:    String(b.username    || 'Trainer').slice(0, 64),
     coins:       Number(b.coins)       || 0,
     score:       Number(b.score)       || 0,
     collection:  JSON.stringify(Array.isArray(b.collection) ? b.collection : []),

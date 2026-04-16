@@ -223,7 +223,7 @@ function addCoins(amount) {
 }
 
 function getUsername() {
-  return localStorage.getItem(KEY_USERNAME) || 'Игрок';
+  return localStorage.getItem(KEY_USERNAME) || 'Trainer';
 }
 function setUsername(name) {
   localStorage.setItem(KEY_USERNAME, name);
@@ -460,7 +460,7 @@ function initTelegram() {
   try {
     const user = tg.initDataUnsafe?.user;
     if (user) {
-      const name = [user.first_name, user.last_name].filter(Boolean).join(' ') || user.username || 'Игрок';
+      const name = [user.first_name, user.last_name].filter(Boolean).join(' ') || user.username || 'Trainer';
       setUsername(name);
     }
   } catch {}
@@ -675,7 +675,7 @@ async function runPackOpeningSequence(cards, onDone) {
   // Swipe hint
   const hint = document.createElement('div');
   hint.className = 'swipe-hint';
-  hint.innerHTML = '<span class="swipe-arrow">←</span> смахни <span class="swipe-arrow">→</span>';
+  hint.innerHTML = '<span class="swipe-arrow">←</span> swipe <span class="swipe-arrow">→</span>';
   revealArea.appendChild(hint);
 
   // Reveal each card via swipe
@@ -726,7 +726,7 @@ function renderHomeScreen() {
     if (collection.length === 0) {
       const empty = document.createElement('div');
       empty.className = 'deck-strip-empty';
-      empty.textContent = 'Открой первый пакет!';
+      empty.textContent = 'Open your first pack!';
       strip.appendChild(empty);
     } else {
       const sorted = [...collection]
@@ -758,11 +758,11 @@ function updateHomePackTimer() {
   if (!sub || !timer) return;
 
   if (canOpenPack()) {
-    sub.textContent   = getCollection().length === 0 ? 'Первый пак бесплатно!' : 'Доступен!';
-    timer.textContent = 'Открыть сейчас';
+    sub.textContent   = getCollection().length === 0 ? 'First pack is free!' : 'Available!';
+    timer.textContent = 'Open now';
     if (btn) btn.disabled = false;
   } else {
-    sub.textContent   = 'Следующий пак через';
+    sub.textContent   = 'Next pack in';
     timer.textContent = formatTime(msUntilNextPack());
     if (btn) btn.disabled = true;
   }
@@ -815,7 +815,7 @@ function renderProfileScreen() {
   if (collection.length === 0) {
     const empty = document.createElement('p');
     empty.className = 'empty-state';
-    empty.innerHTML = 'Пока нет карточек.<br>Открой первый пакет!';
+    empty.innerHTML = 'No cards yet.<br>Open your first pack!';
     grid.appendChild(empty);
   } else {
     const sorted = [...collection].sort((a, b) =>
@@ -833,11 +833,11 @@ function updateDailyRewardUI() {
 
   if (canClaimReward()) {
     btn.classList.remove('hidden');
-    sub.textContent = 'Доступна!';
+    sub.textContent = 'Available!';
     if (rewardTimerInterval) { clearInterval(rewardTimerInterval); rewardTimerInterval = null; }
   } else {
     btn.classList.add('hidden');
-    sub.textContent = 'Следующая через ' + formatTime(msUntilNextReward());
+    sub.textContent = 'Next in ' + formatTime(msUntilNextReward());
   }
 }
 
@@ -1009,13 +1009,13 @@ async function delistListing(listing) {
 
 async function renderMarketScreen() {
   const list = document.getElementById('market-list');
-  list.innerHTML = '<div class="rating-empty">Загрузка...</div>';
+  list.innerHTML = '<div class="rating-empty">Loading...</div>';
 
   let listings;
   try {
     listings = await fetchListings();
   } catch {
-    list.innerHTML = '<div class="market-empty">Ошибка загрузки. Попробуйте позже.</div>';
+    list.innerHTML = '<div class="market-empty">Failed to load. Try again later.</div>';
     return;
   }
 
@@ -1023,7 +1023,7 @@ async function renderMarketScreen() {
   const myCoins = getCoins();
 
   if (listings.length === 0) {
-    list.innerHTML = '<div class="market-empty">Пока нет лотов.<br>Выставь карточки из профиля!</div>';
+    list.innerHTML = '<div class="market-empty">No listings yet.<br>List cards from your profile!</div>';
     return;
   }
 
@@ -1059,7 +1059,7 @@ async function renderMarketScreen() {
     info.innerHTML = `
       <div class="market-card-name">${card.name}</div>
       <div class="market-card-rarity ${card.rarityCSS || 'common'}">${card.rarityLabel || ''}</div>
-      <div class="market-seller">${isMine ? '⭐ Ваш лот' : '👤 ' + listing.sellerName}</div>`;
+      <div class="market-seller">${isMine ? '⭐ Your listing' : '👤 ' + listing.sellerName}</div>`;
     row.appendChild(info);
 
     // Right side: price + action button
@@ -1074,7 +1074,7 @@ async function renderMarketScreen() {
     if (isMine) {
       const btn = document.createElement('button');
       btn.className = 'btn-delist';
-      btn.textContent = 'Снять';
+      btn.textContent = 'Delist';
       btn.addEventListener('click', async () => {
         btn.disabled = true;
         btn.textContent = '...';
@@ -1085,14 +1085,14 @@ async function renderMarketScreen() {
           renderHomeScreen();
         } catch {
           btn.disabled = false;
-          btn.textContent = 'Снять';
+          btn.textContent = 'Delist';
         }
       });
       right.appendChild(btn);
     } else {
       const btn = document.createElement('button');
       btn.className = 'btn-buy';
-      btn.textContent = 'Купить';
+      btn.textContent = 'Buy';
       if (myCoins < listing.price) btn.disabled = true;
       btn.addEventListener('click', async () => {
         btn.disabled = true;
@@ -1104,11 +1104,11 @@ async function renderMarketScreen() {
             renderHomeScreen();
             submitCurrentScore();
           } else {
-            btn.textContent = 'Купить';
+            btn.textContent = 'Buy';
             btn.disabled = false;
           }
         } catch {
-          btn.textContent = 'Купить';
+          btn.textContent = 'Buy';
           btn.disabled = false;
         }
       });
@@ -1139,7 +1139,7 @@ function openListModal(card) {
   area.appendChild(el);
 
   input.value = String(card.value || 50);
-  hint.textContent = `Минимальная стоимость: 🪙 ${(card.value || 50).toLocaleString()}`;
+  hint.textContent = `Base value: 🪙 ${(card.value || 50).toLocaleString()}`;
 
   modal.classList.remove('hidden');
 }
@@ -1177,7 +1177,7 @@ async function confirmListing() {
     submitCurrentScore();
   } catch {
     btn.disabled = false;
-    btn.textContent = 'Выставить';
+    btn.textContent = 'List';
   }
 }
 
@@ -1187,7 +1187,7 @@ async function confirmListing() {
 
 async function loadRatingScreen() {
   const list = document.getElementById('rating-list');
-  list.innerHTML = '<div class="rating-loading">Загрузка...</div>';
+  list.innerHTML = '<div class="rating-loading">Loading...</div>';
 
   try {
     const players = await fetchLeaderboard();
@@ -1195,7 +1195,7 @@ async function loadRatingScreen() {
     list.innerHTML = '';
 
     if (players.length === 0) {
-      list.innerHTML = '<div class="rating-loading">Пока нет игроков. Будь первым!</div>';
+      list.innerHTML = '<div class="rating-loading">No players yet. Be the first!</div>';
       return;
     }
 
@@ -1207,14 +1207,14 @@ async function loadRatingScreen() {
       row.innerHTML = `
         <span class="rating-rank">${medals[i] || (i + 1)}</span>
         <div class="rating-info">
-          <div class="rating-name">${p.name}${isMe ? ' (Вы)' : ''}</div>
-          <div class="rating-meta">${p.cards} карточек</div>
+          <div class="rating-name">${p.name}${isMe ? ' (You)' : ''}</div>
+          <div class="rating-meta">${p.cards} cards</div>
         </div>
         <span class="rating-score">🪙 ${(p.score || 0).toLocaleString()}</span>`;
       list.appendChild(row);
     });
   } catch {
-    list.innerHTML = '<div class="rating-loading">Ошибка загрузки. Попробуйте позже.</div>';
+    list.innerHTML = '<div class="rating-loading">Failed to load. Try again later.</div>';
   }
 }
 
@@ -1385,7 +1385,7 @@ function applyAvatarToEl(el, avatarId, fallbackLetter) {
   if (el.id === 'profile-avatar') {
     const hint = document.createElement('span');
     hint.className = 'avatar-edit-hint';
-    hint.textContent = 'изменить';
+    hint.textContent = 'edit';
     el.appendChild(hint);
   }
 }

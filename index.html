@@ -1,13 +1,13 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <title>Pokémon Паки</title>
-  <link rel="stylesheet" href="style.css?v=12" />
+  <title>Pokémon TCG: Packs</title>
+  <link rel="stylesheet" href="style.css?v=13" />
 </head>
 <body>
 
@@ -18,7 +18,7 @@
   <header class="app-header" id="app-header">
     <div class="app-header-inner">
       <div class="app-header-icon">⬟</div>
-      <span class="app-header-title">POKÉ TCG: ПАКИ</span>
+      <span class="app-header-title">POKÉ TCG: PACKS</span>
       <div class="app-header-coins" id="header-coins">🪙 0</div>
     </div>
   </header>
@@ -34,8 +34,8 @@
     <div class="home-section trainer-section" onclick="navigate('profile')">
       <div class="trainer-avatar" id="home-avatar">T</div>
       <div class="trainer-meta">
-        <div class="trainer-name" id="home-trainer-name">Тренер</div>
-        <div class="trainer-badge">⭐ Тренер покемонов</div>
+        <div class="trainer-name" id="home-trainer-name">Trainer</div>
+        <div class="trainer-badge">⭐ Pokemon Trainer</div>
       </div>
       <span class="section-chevron">›</span>
     </div>
@@ -43,18 +43,18 @@
     <!-- My Deck / Collection preview -->
     <div class="home-section deck-section" onclick="navigate('profile')">
       <div class="home-section-header">
-        <span class="home-section-title">Моя колода</span>
+        <span class="home-section-title">My Deck</span>
         <span class="section-chevron">›</span>
       </div>
       <div class="deck-strip" id="home-deck-strip">
-        <div class="deck-strip-empty">Открой первый пакет!</div>
+        <div class="deck-strip-empty">Open your first pack!</div>
       </div>
     </div>
 
     <!-- Booster Packs -->
     <div class="home-section pack-section">
       <div class="home-section-header">
-        <span class="home-section-title">Бустер паки</span>
+        <span class="home-section-title">Booster Packs</span>
       </div>
       <div class="pack-section-body">
         <div class="pack-mini-visual">
@@ -62,8 +62,8 @@
           <div class="pack-mini-label">Kanto</div>
         </div>
         <div class="pack-section-info">
-          <div class="pack-section-sub" id="home-pack-sub">Следующий пак через</div>
-          <div class="pack-section-timer" id="home-pack-timer">Доступен!</div>
+          <div class="pack-section-sub" id="home-pack-sub">Next pack in</div>
+          <div class="pack-section-timer" id="home-pack-timer">Available!</div>
         </div>
       </div>
     </div>
@@ -74,7 +74,7 @@
         <div class="btn-battle-ball-line"></div>
         <div class="btn-battle-ball-center"></div>
       </div>
-      <span>ОТКРЫТЬ ПАК</span>
+      <span>OPEN PACK</span>
     </button>
 
     <p id="already-opened-msg" class="already-msg hidden"></p>
@@ -88,21 +88,21 @@
         <div class="pack-pokeball"></div>
         <div class="pack-label">
           <span class="pack-edition">Kanto Edition</span>
-          <span class="pack-count">5 карточек</span>
+          <span class="pack-count">5 cards</span>
         </div>
       </div>
-      <p id="pack-instruction" class="pack-instruction">Нажмите на пакет, чтобы открыть!</p>
+      <p id="pack-instruction" class="pack-instruction"></p>
     </div>
     <div id="cards-reveal-area" class="cards-reveal-area hidden"></div>
   </div>
 
   <!-- ======= SCREEN 3: Results ======= -->
   <div id="screen-results" class="screen hidden has-nav">
-    <h2 class="page-title">Ваша коллекция!</h2>
-    <p class="page-subtitle">Вот карточки из вашего пакета:</p>
+    <h2 class="page-title">Your Cards!</h2>
+    <p class="page-subtitle">Here are your pack cards:</p>
     <div id="results-cards" class="results-cards"></div>
     <div class="results-footer">
-      <button class="btn-secondary" onclick="navigate('profile')">👤 Перейти в кабинет</button>
+      <button class="btn-secondary" onclick="navigate('profile')">👤 Go to Profile</button>
     </div>
   </div>
 
@@ -112,15 +112,15 @@
     <!-- Profile header -->
     <div class="profile-hero">
       <div class="profile-hero-avatar" id="profile-avatar" onclick="openAvatarPicker()">
-        <span class="avatar-edit-hint">изменить</span>
+        <span class="avatar-edit-hint">edit</span>
       </div>
       <div class="profile-hero-info">
-        <h2 class="profile-hero-name" id="profile-name">Игрок</h2>
+        <h2 class="profile-hero-name" id="profile-name">Trainer</h2>
         <div class="profile-hero-coins">🪙 <span id="profile-coins-count">0</span></div>
       </div>
       <div class="profile-hero-value">
         <span class="hero-value-num" id="profile-total-value">0</span>
-        <span class="hero-value-label">общая стоимость</span>
+        <span class="hero-value-label">total value</span>
       </div>
     </div>
 
@@ -128,33 +128,33 @@
     <div class="reward-banner" id="daily-reward-banner">
       <span class="reward-banner-icon">🎁</span>
       <div class="reward-banner-text">
-        <span class="reward-banner-title">Ежедневная награда</span>
-        <span class="reward-banner-sub" id="daily-reward-sub">Проверяем...</span>
+        <span class="reward-banner-title">Daily Reward</span>
+        <span class="reward-banner-sub" id="daily-reward-sub">Checking...</span>
       </div>
-      <button class="reward-banner-btn hidden" id="daily-reward-btn">Забрать</button>
+      <button class="reward-banner-btn hidden" id="daily-reward-btn">Claim</button>
     </div>
 
     <!-- Stats -->
     <div class="stats-grid">
       <div class="stat-card">
         <span class="stat-val" id="stat-total-cards">0</span>
-        <span class="stat-lbl">Карточек</span>
+        <span class="stat-lbl">Cards</span>
       </div>
       <div class="stat-card">
         <span class="stat-val" id="stat-rarest">—</span>
-        <span class="stat-lbl">Редчайшая</span>
+        <span class="stat-lbl">Rarest</span>
       </div>
       <div class="stat-card">
         <span class="stat-val" id="stat-best-card">—</span>
-        <span class="stat-lbl">Дорогая</span>
+        <span class="stat-lbl">Most Valuable</span>
       </div>
       <div class="stat-card">
         <span class="stat-val" id="stat-collection-value">0</span>
-        <span class="stat-lbl">🪙 Стоимость</span>
+        <span class="stat-lbl">🪙 Value</span>
       </div>
     </div>
 
-    <h3 class="section-label">Моя коллекция</h3>
+    <h3 class="section-label">My Collection</h3>
     <div id="profile-collection" class="profile-collection"></div>
 
   </div>
@@ -162,23 +162,23 @@
   <!-- ======= SCREEN 5: Rating ======= -->
   <div id="screen-rating" class="screen hidden has-nav">
     <div class="rating-top">
-      <h2 class="page-title">Рейтинг</h2>
+      <h2 class="page-title">Leaderboard</h2>
       <button class="btn-refresh" id="btn-refresh-rating">↻</button>
     </div>
     <div id="rating-list" class="rating-list">
-      <div class="rating-empty">Загрузка...</div>
+      <div class="rating-empty">Loading...</div>
     </div>
   </div>
 
   <!-- ======= SCREEN 6: Market ======= -->
   <div id="screen-market" class="screen hidden has-nav">
     <div class="market-top">
-      <h2 class="page-title">Маркетплейс</h2>
+      <h2 class="page-title">Marketplace</h2>
       <button class="btn-refresh" id="btn-refresh-market">↻</button>
     </div>
-    <p class="market-subtitle">Покупай и продавай карточки</p>
+    <p class="market-subtitle">Buy and sell cards</p>
     <div id="market-list" class="market-list">
-      <div class="rating-empty">Загрузка...</div>
+      <div class="rating-empty">Loading...</div>
     </div>
   </div>
 
@@ -186,19 +186,19 @@
   <nav class="main-nav" id="main-nav">
     <button class="nav-tab active" id="nav-home" onclick="navigate('home')">
       <span class="nav-ico">🏠</span>
-      <span class="nav-lbl">Паки</span>
+      <span class="nav-lbl">Packs</span>
     </button>
     <button class="nav-tab" id="nav-profile" onclick="navigate('profile')">
       <span class="nav-ico">👤</span>
-      <span class="nav-lbl">Профиль</span>
+      <span class="nav-lbl">Profile</span>
     </button>
     <button class="nav-tab" id="nav-rating" onclick="navigate('rating')">
       <span class="nav-ico">🏆</span>
-      <span class="nav-lbl">Рейтинг</span>
+      <span class="nav-lbl">Ranking</span>
     </button>
     <button class="nav-tab" id="nav-market" onclick="navigate('market')">
       <span class="nav-ico">🛒</span>
-      <span class="nav-lbl">Маркет</span>
+      <span class="nav-lbl">Market</span>
     </button>
   </nav>
 
@@ -206,8 +206,8 @@
   <div id="avatar-modal" class="modal hidden">
     <div class="modal-backdrop" id="avatar-modal-backdrop"></div>
     <div class="modal-sheet">
-      <h3 class="modal-title">Выбери покемона</h3>
-      <p class="modal-sub">Аватар вашего профиля</p>
+      <h3 class="modal-title">Choose a Pokemon</h3>
+      <p class="modal-sub">Your profile avatar</p>
       <div class="avatar-picker-grid" id="avatar-picker-grid"></div>
     </div>
   </div>
@@ -217,13 +217,13 @@
     <div class="modal-backdrop" id="sell-modal-backdrop"></div>
     <div class="modal-sheet">
       <div id="sell-modal-card-area"></div>
-      <p class="modal-sell-text">Продать за <strong id="sell-modal-value">0</strong> 🪙?</p>
+      <p class="modal-sell-text">Sell for <strong id="sell-modal-value">0</strong> 🪙?</p>
       <div class="modal-row">
-        <button class="btn-danger" id="btn-sell-confirm">Продать</button>
-        <button class="btn-market-list" id="btn-sell-list">🛒 На маркет</button>
+        <button class="btn-danger" id="btn-sell-confirm">Sell</button>
+        <button class="btn-market-list" id="btn-sell-list">🛒 List</button>
       </div>
       <div class="modal-row">
-        <button class="btn-secondary" id="btn-sell-cancel">Отмена</button>
+        <button class="btn-secondary" id="btn-sell-cancel">Cancel</button>
       </div>
     </div>
   </div>
@@ -232,16 +232,16 @@
   <div id="list-modal" class="modal hidden">
     <div class="modal-backdrop" id="list-modal-backdrop"></div>
     <div class="modal-sheet">
-      <h3 class="modal-title">Выставить на маркет</h3>
+      <h3 class="modal-title">List on Market</h3>
       <div id="list-modal-card-area"></div>
       <div class="list-price-row">
-        <span class="list-price-label">Цена 🪙</span>
-        <input type="number" id="list-price-input" class="list-price-input" min="1" placeholder="Введите цену" />
+        <span class="list-price-label">Price 🪙</span>
+        <input type="number" id="list-price-input" class="list-price-input" min="1" placeholder="Enter price" />
       </div>
       <p class="modal-sub list-price-hint" id="list-price-hint"></p>
       <div class="modal-row">
-        <button class="btn-battle small" id="btn-list-confirm">Выставить</button>
-        <button class="btn-secondary" id="btn-list-cancel">Отмена</button>
+        <button class="btn-battle small" id="btn-list-confirm">List</button>
+        <button class="btn-secondary" id="btn-list-cancel">Cancel</button>
       </div>
     </div>
   </div>
@@ -250,20 +250,20 @@
   <div id="reward-modal" class="modal hidden">
     <div class="modal-backdrop" id="reward-modal-backdrop"></div>
     <div class="modal-sheet">
-      <h3 class="modal-title">🎁 Ежедневная награда!</h3>
-      <p class="modal-sub">Вы получили 3 новые карточки:</p>
+      <h3 class="modal-title">🎁 Daily Reward!</h3>
+      <p class="modal-sub">You received 3 new cards:</p>
       <div id="reward-cards-area" class="reward-cards-area"></div>
-      <button class="btn-battle small" id="btn-reward-close">Забрать!</button>
+      <button class="btn-battle small" id="btn-reward-close">Claim!</button>
     </div>
   </div>
 
   <!-- ======= LOADING ======= -->
   <div id="loading-overlay" class="loading-overlay hidden">
     <div class="pokeball-spinner"></div>
-    <p>Загрузка...</p>
+    <p>Loading...</p>
   </div>
 
   <script src="https://telegram.org/js/telegram-web-app.js" defer></script>
-  <script src="app.js?v=12" defer></script>
+  <script src="app.js?v=13" defer></script>
 </body>
 </html>
