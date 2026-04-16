@@ -1262,9 +1262,12 @@ async function confirmListing() {
 
     haptic('medium');
     closeListModal();
+
+    // AWAIT the save so iOS doesn't kill the fetch before it fires
+    await saveFullState();
+
     renderProfileScreen();
     renderHomeScreen();
-    submitCurrentScore();
   } catch (err) {
     console.error('[confirmListing] failed:', err);
     btn.disabled = false;
@@ -1552,6 +1555,9 @@ async function main() {
 
   // Load latest data from server (syncs across devices)
   await loadFromServer();
+
+  // Flush any pending market listings that failed to save last session
+  if (getPendingListings().length > 0) await saveFullState();
 
   // Apply saved avatar on load
   const savedAvatar = getAvatarId();
