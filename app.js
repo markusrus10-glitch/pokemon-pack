@@ -305,8 +305,12 @@ async function saveFullState() {
         pending_listings: pending.length > 0 ? pending : undefined,
       }),
     });
-    if (res.ok) clearPendingListings();
-  } catch {}
+    if (res.ok) { clearPendingListings(); return true; }
+    return false;
+  } catch (e) {
+    console.error('[saveFullState]', e?.message || e);
+    return false;
+  }
 }
 
 async function loadFromServer() {
@@ -434,6 +438,24 @@ function buildProfileCardItem(card, onClick) {
   item.appendChild(btnRow);
 
   return item;
+}
+
+// ============================================================
+// TOAST
+// ============================================================
+
+function showToast(msg, ms = 3000) {
+  let el = document.getElementById('app-toast');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'app-toast';
+    el.style.cssText = 'position:fixed;top:68px;left:50%;transform:translateX(-50%) translateZ(0);background:rgba(20,20,30,0.95);color:#fff;padding:10px 20px;border-radius:22px;z-index:9999;font-size:13px;pointer-events:none;transition:opacity 0.3s;white-space:nowrap;box-shadow:0 2px 12px rgba(0,0,0,0.5)';
+    document.body.appendChild(el);
+  }
+  el.textContent = msg;
+  el.style.opacity = '1';
+  clearTimeout(el._t);
+  el._t = setTimeout(() => { el.style.opacity = '0'; }, ms);
 }
 
 // ============================================================
@@ -793,7 +815,7 @@ function renderHomeScreen() {
     dbg.style.cssText = 'font-size:10px;color:rgba(255,255,255,0.4);text-align:center;padding:2px 8px';
     document.getElementById('screen-welcome').appendChild(dbg);
   }
-  dbg.textContent = `ID:${getTelegramId()} cards:${collection.length} coins:${coins}`;
+  dbg.textContent = `v25 ID:${getTelegramId()} cards:${collection.length} pending:${getPendingListings().length}`;
 
   const nameEl = document.getElementById('home-trainer-name');
   const avatarEl = document.getElementById('home-avatar');
@@ -1251,7 +1273,7 @@ async function confirmListing() {
   btn.textContent = '...';
 
   try {
-    // Create listing on server FIRST — only remove from collection if it succeeds
+    showToast('⏳ step 1: creating...');
     const listing = await createListing(listTargetCard, price);
     addMyListingLocal(listing);
 
@@ -1263,13 +1285,15 @@ async function confirmListing() {
     haptic('medium');
     closeListModal();
 
-    // AWAIT the save so iOS doesn't kill the fetch before it fires
-    await saveFullState();
+    showToast('⏳ step 2: saving to server...');
+    const ok = await saveFullState();
+    showToast(ok ? '✓ Listed on market!' : '⚠ No connection — queued');
 
     renderProfileScreen();
     renderHomeScreen();
   } catch (err) {
     console.error('[confirmListing] failed:', err);
+    showToast('✗ Error: ' + (err?.message || 'unknown'));
     btn.disabled = false;
     btn.textContent = 'List';
   }
