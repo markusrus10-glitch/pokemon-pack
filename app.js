@@ -961,10 +961,10 @@ function openSellModal(card) {
 
   area.innerHTML = '';
   const el = buildCardElement(card, true);
-  // Scale the card smaller inside modal
-  el.style.cssText = '--card-width:130px;--card-height:182px';
-  el.querySelector('.card-wrapper').style.width  = '130px';
-  el.querySelector('.card-wrapper').style.height = '182px';
+  el.style.width  = '130px';
+  el.style.height = '182px';
+  el.style.setProperty('--card-w', '130px');
+  el.style.setProperty('--card-h', '182px');
   area.appendChild(el);
 
   document.getElementById('sell-modal-value').textContent = card.value.toLocaleString();
@@ -1209,7 +1209,10 @@ function openListModal(card) {
 
   area.innerHTML = '';
   const el = buildCardElement(card, true);
-  el.querySelector('.card-wrapper').style.cssText = 'width:130px;height:182px;--card-w:130px;--card-h:182px';
+  el.style.width  = '130px';
+  el.style.height = '182px';
+  el.style.setProperty('--card-w', '130px');
+  el.style.setProperty('--card-h', '182px');
   area.appendChild(el);
 
   input.value = String(card.value || 50);
