@@ -532,47 +532,34 @@ function showLoading(show) {
 };
 
 // ============================================================
-// PACK OPENING SEQUENCE — SWIPE TO REVEAL
+// PACK OPENING SEQUENCE — TINDER SWIPE STACK
 // ============================================================
 
-const SWIPE_THRESHOLD = 70; // px to trigger reveal
+const SWIPE_THRESHOLD = 75;
 
-function revealCardWithSwipe(card, cardSlot, counterEl, index, total) {
+// Returns CSS for a card at stack position i (0 = top/current)
+function stackTransform(i) {
+  if (i === 0) return '';
+  const scale  = Math.max(0.86, 0.95 - (i - 1) * 0.04);
+  const translateY = i * 7;
+  return `scale(${scale}) translateY(${translateY}px)`;
+}
+function stackBrightness(i) {
+  if (i === 0) return 'brightness(1)';
+  return `brightness(${Math.max(0.55, 0.85 - (i - 1) * 0.12)})`;
+}
+
+// Wait for the user to swipe the top card; animates the next card up underneath
+function waitForTinderSwipe(cardEl, nextCardEl) {
   return new Promise(resolve => {
-    // Build card face-down, then auto-flip to reveal
-    const cardEl = buildCardElement(card, false);
-    cardEl.classList.add('entering');
-    cardSlot.appendChild(cardEl);
-
-    const inner = cardEl.querySelector('.card-inner');
-
-    // Update counter
-    if (counterEl) counterEl.textContent = `${index + 1} / ${total}`;
-
-    // Auto-reveal: flip to front immediately
-    setTimeout(() => {
-      inner.style.transition = 'transform 0.35s ease';
-      inner.classList.add('flipped');
-      haptic({ common:'light', uncommon:'light', rare:'medium', ultraRare:'heavy', crown:'heavy' }[card.rarity] || 'light');
-      if (card.rarity === 'ultraRare' || card.rarity === 'crown') {
-        const overlay = document.createElement('div');
-        overlay.className = 'spotlight-overlay ' + (card.rarity === 'crown' ? 'crown' : 'ultra');
-        document.body.appendChild(overlay);
-        setTimeout(() => overlay.remove(), 1400);
-      }
-    }, 80);
-
-    let startX = 0, startY = 0;
-    let dragging = false;
-    let done = false;
+    let startX = 0, startY = 0, dragging = false, done = false;
 
     function getX(e) { return e.touches ? e.touches[0].clientX : e.clientX; }
     function getY(e) { return e.touches ? e.touches[0].clientY : e.clientY; }
 
     function onStart(e) {
       if (done) return;
-      startX = getX(e);
-      startY = getY(e);
+      startX = getX(e); startY = getY(e);
       dragging = true;
       cardEl.style.transition = 'none';
     }
@@ -581,15 +568,21 @@ function revealCardWithSwipe(card, cardSlot, counterEl, index, total) {
       if (!dragging || done) return;
       const dx = getX(e) - startX;
       const dy = getY(e) - startY;
-      // Only horizontal swipe (ignore vertical scroll)
-      if (Math.abs(dx) < Math.abs(dy) * 0.6 && Math.abs(dx) < 20) return;
+      if (Math.abs(dx) < Math.abs(dy) * 0.55 && Math.abs(dx) < 12) return;
       if (e.cancelable) e.preventDefault();
-      const rotate = dx * 0.07;
-      const progress = Math.min(Math.abs(dx) / SWIPE_THRESHOLD, 1);
+
+      const rotate  = dx * 0.12;
       cardEl.style.transform = `translateX(${dx}px) rotate(${rotate}deg)`;
-      // Show directional tint on card front
-      inner.style.setProperty('--swipe-progress', progress);
-      inner.style.setProperty('--swipe-dir', dx > 0 ? '1' : '-1');
+
+      // Next card scales up as this one is dragged away
+      if (nextCardEl) {
+        const progress = Math.min(Math.abs(dx) / SWIPE_THRESHOLD, 1);
+        const scale    = 0.91 + progress * 0.09;
+        const bright   = 0.7  + progress * 0.3;
+        nextCardEl.style.transition = 'none';
+        nextCardEl.style.transform  = `scale(${scale}) translateY(${(1 - progress) * 7}px)`;
+        nextCardEl.style.filter     = `brightness(${bright})`;
+      }
     }
 
     function onEnd(e) {
@@ -598,23 +591,33 @@ function revealCardWithSwipe(card, cardSlot, counterEl, index, total) {
       const dx = (e.changedTouches ? e.changedTouches[0].clientX : e.clientX) - startX;
 
       if (Math.abs(dx) >= SWIPE_THRESHOLD) {
-        // Swipe confirmed — fly off immediately, no delays
         done = true;
         cleanup();
         const dir = dx > 0 ? 1 : -1;
 
-        cardEl.style.transition = 'transform 0.3s ease-in, opacity 0.25s ease';
-        cardEl.style.transform  = `translateX(${dir * 110}vw) rotate(${dir * 22}deg)`;
+        // Fly card fully off screen
+        cardEl.style.transition = 'transform 0.38s ease-in, opacity 0.3s ease';
+        cardEl.style.transform  = `translateX(${dir * 115}vw) rotate(${dir * 28}deg)`;
         cardEl.style.opacity    = '0';
 
-        // Resolve right away so next card appears immediately
-        resolve();
-        setTimeout(() => cardEl.remove(), 350);
+        // Snap next card to full size instantly
+        if (nextCardEl) {
+          nextCardEl.style.transition = 'transform 0.25s cubic-bezier(0.34,1.3,0.64,1), filter 0.25s ease';
+          nextCardEl.style.transform  = '';
+          nextCardEl.style.filter     = 'brightness(1)';
+        }
 
+        resolve(); // next card immediately
+        setTimeout(() => cardEl.remove(), 420);
       } else {
-        // Snap back
-        cardEl.style.transition = 'transform 0.35s cubic-bezier(0.34,1.56,0.64,1)';
+        // Snap back with spring
+        cardEl.style.transition = 'transform 0.4s cubic-bezier(0.34,1.56,0.64,1)';
         cardEl.style.transform  = '';
+        if (nextCardEl) {
+          nextCardEl.style.transition = 'transform 0.35s ease, filter 0.35s ease';
+          nextCardEl.style.transform  = stackTransform(1);
+          nextCardEl.style.filter     = stackBrightness(1);
+        }
       }
     }
 
@@ -648,21 +651,18 @@ async function runPackOpeningSequence(cards, onDone) {
   revealArea.classList.add('hidden');
   revealArea.innerHTML = '';
 
-  // Short pause so user sees the pack before it opens
   await sleep(400);
-
   haptic('medium');
   packInstr.textContent = '';
   packVisual.classList.add('shaking');
   await sleep(860);
-
   packVisual.classList.remove('shaking');
   packVisual.classList.add('bursting');
   await sleep(500);
   packVisual.style.display = 'none';
   revealArea.classList.remove('hidden');
 
-  // Card slot (where card lives)
+  // Card slot — holds the whole stack
   const cardSlot = document.createElement('div');
   cardSlot.className = 'card-slot';
   revealArea.appendChild(cardSlot);
@@ -678,9 +678,49 @@ async function runPackOpeningSequence(cards, onDone) {
   hint.innerHTML = '<span class="swipe-arrow">←</span> swipe <span class="swipe-arrow">→</span>';
   revealArea.appendChild(hint);
 
-  // Reveal each card via swipe
+  // Pre-render ALL cards as a stack (last card deepest, first card on top)
+  const cardEls = cards.map((card, i) => {
+    const el = buildCardElement(card, false); // face-down
+    el.style.position   = 'absolute';
+    el.style.zIndex     = String(cards.length - i);
+    el.style.transform  = stackTransform(i);
+    el.style.filter     = stackBrightness(i);
+    el.style.transition = 'transform 0.3s ease, filter 0.3s ease';
+    cardSlot.appendChild(el);
+    return el;
+  });
+
+  // Reveal each card one by one
   for (let i = 0; i < cards.length; i++) {
-    await revealCardWithSwipe(cards[i], cardSlot, counterEl, i, cards.length);
+    const card     = cards[i];
+    const cardEl   = cardEls[i];
+    const nextEl   = cardEls[i + 1] || null;
+
+    counterEl.textContent = `${i + 1} / ${cards.length}`;
+
+    // Auto-flip top card to reveal
+    await sleep(100);
+    const inner = cardEl.querySelector('.card-inner');
+    inner.style.transition = 'transform 0.4s ease';
+    inner.classList.add('flipped');
+    haptic({ common:'light', uncommon:'light', rare:'medium', ultraRare:'heavy', crown:'heavy' }[card.rarity] || 'light');
+    if (card.rarity === 'ultraRare' || card.rarity === 'crown') {
+      const overlay = document.createElement('div');
+      overlay.className = 'spotlight-overlay ' + (card.rarity === 'crown' ? 'crown' : 'ultra');
+      document.body.appendChild(overlay);
+      setTimeout(() => overlay.remove(), 1400);
+    }
+
+    // Wait for swipe
+    await waitForTinderSwipe(cardEl, nextEl);
+
+    // After swipe — shift remaining cards up in the stack
+    for (let j = i + 2; j < cards.length; j++) {
+      const stackIdx = j - (i + 1);
+      cardEls[j].style.transition = 'transform 0.3s ease, filter 0.3s ease';
+      cardEls[j].style.transform  = stackTransform(stackIdx);
+      cardEls[j].style.filter     = stackBrightness(stackIdx);
+    }
   }
 
   await sleep(200);
