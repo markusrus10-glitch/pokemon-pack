@@ -77,8 +77,8 @@ html, body {
 .app-header-icon { font-size: 1.3rem; color: var(--gold); flex-shrink: 0; }
 .app-header-title {
   flex: 1;
-  font-size: 0.88rem; font-weight: 800;
-  letter-spacing: 0.08em;
+  font-size: 0.78rem; font-weight: 800;
+  letter-spacing: 0.06em;
   background: linear-gradient(90deg, #fff 60%, var(--gold));
   -webkit-background-clip: text; -webkit-text-fill-color: transparent;
   background-clip: text;
