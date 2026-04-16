@@ -1034,11 +1034,15 @@ async function createListing(card, price) {
     card:        { ...card },
     price:       Math.max(1, Math.floor(Number(price))),
   };
-  await fetch(`${API_URL}/api/market`, {
+  const res = await fetch(`${API_URL}/api/market`, {
     method:  'POST',
     headers: { 'Content-Type': 'application/json' },
     body:    JSON.stringify(listing),
   });
+  if (!res.ok) {
+    const body = await res.text().catch(() => '');
+    throw new Error(`Server error ${res.status}: ${body}`);
+  }
   return { ...listing, sellerName: listing.seller_name, listedAt: new Date().toISOString() };
 }
 
@@ -1252,9 +1256,11 @@ async function confirmListing() {
     renderProfileScreen();
     renderHomeScreen();
     submitCurrentScore();
-  } catch {
+  } catch (err) {
+    console.error('[confirmListing] failed:', err);
     btn.disabled = false;
     btn.textContent = 'List';
+    alert('Failed to list: ' + (err?.message || err));
   }
 }
 

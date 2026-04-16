@@ -122,7 +122,7 @@ app.delete('/api/market/:uid', (req, res) => {
 
 // ── FALLBACK → SPA ────────────────────────────────────────────
 app.get('*', (_req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 // ── START ─────────────────────────────────────────────────────
