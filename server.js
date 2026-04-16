@@ -77,6 +77,11 @@ app.get('/api/user/:id', (req, res) => {
   res.json({ ...row, collection: JSON.parse(row.collection || '[]') });
 });
 
+const stmtInsertListing = db.prepare(`
+  INSERT OR IGNORE INTO market (uid, seller_id, seller_name, card, price, listed_at)
+  VALUES (?, ?, ?, ?, ?, ?)
+`);
+
 app.post('/api/user/:id', (req, res) => {
   const b = req.body;
   stmtUpsertUser.run({
@@ -90,6 +95,21 @@ app.post('/api/user/:id', (req, res) => {
     last_reward: b.last_reward || null,
     updated_at:  new Date().toISOString(),
   });
+  // Save any pending market listings
+  if (Array.isArray(b.pending_listings)) {
+    for (const l of b.pending_listings) {
+      if (l.uid && l.card && l.price && l.seller_id) {
+        stmtInsertListing.run(
+          String(l.uid),
+          String(l.seller_id),
+          String(l.seller_name || 'Trader').slice(0, 64),
+          JSON.stringify(l.card),
+          Number(l.price),
+          new Date().toISOString()
+        );
+      }
+    }
+  }
   res.json({ ok: true });
 });
 

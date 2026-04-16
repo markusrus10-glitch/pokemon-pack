@@ -103,6 +103,7 @@ const KEY_USERNAME      = 'pokemon_username_v1';
 const KEY_AVATAR        = 'pokemon_avatar_v1';
 const KEY_OLD_PACK      = 'pokemon_pack_v1';
 const KEY_MY_LISTINGS   = 'pokemon_my_listings_v1';
+const KEY_PENDING_LIST  = 'pokemon_pending_listings_v1';
 
 // Server API (same-origin — served by our own Node.js server)
 const API_URL = '';
@@ -273,23 +274,38 @@ function migrateOldData() {
 // SERVER SYNC
 // ============================================================
 
+function getPendingListings() {
+  try { return JSON.parse(localStorage.getItem(KEY_PENDING_LIST)) || []; } catch { return []; }
+}
+function addPendingListing(listing) {
+  const arr = getPendingListings();
+  arr.push(listing);
+  localStorage.setItem(KEY_PENDING_LIST, JSON.stringify(arr));
+}
+function clearPendingListings() {
+  localStorage.removeItem(KEY_PENDING_LIST);
+}
+
 async function saveFullState() {
   try {
-    const col   = getCollection();
-    const score = col.reduce((s, c) => s + (c.value || 0), 0);
-    await fetch(`${API_URL}/api/user/${getTelegramId()}`, {
+    const col     = getCollection();
+    const score   = col.reduce((s, c) => s + (c.value || 0), 0);
+    const pending = getPendingListings();
+    const res = await fetch(`${API_URL}/api/user/${getTelegramId()}`, {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        username:    getUsername(),
-        coins:       getCoins(),
+        username:         getUsername(),
+        coins:            getCoins(),
         score,
-        collection:  col,
-        avatar_id:   getAvatarId(),
-        last_pack:   localStorage.getItem(KEY_LAST_PACK)   || null,
-        last_reward: localStorage.getItem(KEY_LAST_REWARD) || null,
+        collection:       col,
+        avatar_id:        getAvatarId(),
+        last_pack:        localStorage.getItem(KEY_LAST_PACK)   || null,
+        last_reward:      localStorage.getItem(KEY_LAST_REWARD) || null,
+        pending_listings: pending.length > 0 ? pending : undefined,
       }),
     });
+    if (res.ok) clearPendingListings();
   } catch {}
 }
 
@@ -1034,15 +1050,8 @@ async function createListing(card, price) {
     card:        { ...card },
     price:       Math.max(1, Math.floor(Number(price))),
   };
-  const res = await fetch(`${API_URL}/api/market`, {
-    method:  'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body:    JSON.stringify(listing),
-  });
-  if (!res.ok) {
-    const body = await res.text().catch(() => '');
-    throw new Error(`Server error ${res.status}: ${body}`);
-  }
+  // Store as pending — submitted via POST /api/user/:id (avoids iOS POST /api/market issue)
+  addPendingListing(listing);
   return { ...listing, sellerName: listing.seller_name, listedAt: new Date().toISOString() };
 }
 
@@ -1260,7 +1269,6 @@ async function confirmListing() {
     console.error('[confirmListing] failed:', err);
     btn.disabled = false;
     btn.textContent = 'List';
-    alert('Failed to list: ' + (err?.message || err));
   }
 }
 
