@@ -214,6 +214,7 @@ function addToCollection(cards) {
   const col = getCollection();
   col.push(...cards);
   saveCollection(col);
+  tgSave(); // persist to Telegram CloudStorage immediately
 }
 
 function getCoins() {
@@ -286,7 +287,54 @@ function clearPendingListings() {
   localStorage.removeItem(KEY_PENDING_LIST);
 }
 
+// ============================================================
+// TELEGRAM CLOUD STORAGE — survives fresh WebView contexts on iOS
+// Stores minimal card data [tcgId, uid, obtainedAt] per card (~48 bytes each)
+// Falls back silently if CloudStorage unavailable.
+// ============================================================
+
+function tgCloud() { return window.Telegram?.WebApp?.CloudStorage; }
+
+function tgSave() {
+  const cs = tgCloud();
+  if (!cs) return;
+  const col     = getCollection();
+  const minimal = col.map(c => [c.tcgId || `base1-${c.id}`, c.uid, c.obtainedAt]);
+  const json    = JSON.stringify(minimal);
+  cs.setItem('c', json.slice(0, 4096));
+  cs.setItem('m', String(getCoins()));
+  cs.setItem('a', String(getAvatarId() || 0));
+}
+
+async function tgLoad() {
+  const cs = tgCloud();
+  if (!cs) return false;
+  return new Promise(resolve => {
+    cs.getItems(['c', 'm', 'a'], (err, vals) => {
+      if (err || !vals?.c) { resolve(false); return; }
+      try {
+        const data = JSON.parse(vals.c);
+        if (!Array.isArray(data) || data.length === 0) { resolve(false); return; }
+        const col = data.map(([tcgId, uid, obtainedAt]) => {
+          for (const [rarity, pool] of Object.entries(POKEMON_POOL)) {
+            const p = pool.find(x => x.tcgId === tcgId);
+            if (p) return enrichCard({ ...p, rarity, uid, obtainedAt });
+          }
+          return null;
+        }).filter(Boolean);
+        if (col.length > getCollection().length) {
+          saveCollection(col);
+          if (vals.m) localStorage.setItem(KEY_COINS, vals.m);
+          if (vals.a) localStorage.setItem(KEY_AVATAR, vals.a);
+        }
+        resolve(col.length > 0);
+      } catch { resolve(false); }
+    });
+  });
+}
+
 async function saveFullState() {
+  tgSave(); // always sync to Telegram CloudStorage (works on iOS without POST)
   const url = `${API_URL}/api/user/${getTelegramId()}`;
   const col     = getCollection();
   const score   = col.reduce((s, c) => s + (c.value || 0), 0);
@@ -833,7 +881,7 @@ function renderHomeScreen() {
     dbg.style.cssText = 'font-size:10px;color:rgba(255,255,255,0.4);text-align:center;padding:2px 8px';
     document.getElementById('screen-welcome').appendChild(dbg);
   }
-  dbg.textContent = `v46 ID:${getTelegramId()} cards:${collection.length} session:${_sessionListings.length}`;
+  dbg.textContent = `v47 ID:${getTelegramId()} cards:${collection.length} tg:${tgCloud()?1:0}`;
 
   const nameEl = document.getElementById('home-trainer-name');
   const avatarEl = document.getElementById('home-avatar');
@@ -1628,6 +1676,9 @@ async function main() {
   initTelegram();
   initStarfield();
   migrateOldData();
+
+  // Telegram CloudStorage — survives fresh WebView, works without POST
+  await tgLoad();
 
   // Load latest data from server (syncs across devices)
   await loadFromServer();
