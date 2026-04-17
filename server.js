@@ -200,10 +200,10 @@ const CARD_CATALOG = {
   69:{name:'Weedle',    hp:40,  rarity:'common',   css:'common',    label:'◆',   value:50},
 };
 
-// ── MARKET LIST — single segment with dots (iOS WKWebView safe) ──
-// URL: /api/market/new/:data  where data = "seller_id.uid.price.tcg_num"
-// One path segment, dot-separated, no slashes — works on all iOS versions
-app.get('/api/market/new/:data', (req, res) => {
+// ── MARKET LIST — 3 path segments, same depth as /api/user/:id (iOS-safe) ──
+// URL: /api/mkt/:data  where data = "seller_id.uid.price.tcg_num"
+// iOS WKWebView allows fetch() to 3-segment paths; blocks 4+ segments
+app.get('/api/mkt/:data', (req, res) => {
   const parts = req.params.data.split('.');
   if (parts.length < 4) return res.status(400).json({ error: 'bad params' });
   const [seller_id, uid, price, tcg_num] = parts;
