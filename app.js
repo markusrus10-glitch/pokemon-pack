@@ -881,7 +881,7 @@ function renderHomeScreen() {
     dbg.style.cssText = 'font-size:10px;color:rgba(255,255,255,0.4);text-align:center;padding:2px 8px';
     document.getElementById('screen-welcome').appendChild(dbg);
   }
-  dbg.textContent = `v47 ID:${getTelegramId()} cards:${collection.length} tg:${tgCloud()?1:0}`;
+  dbg.textContent = `v48 ID:${getTelegramId()} cards:${collection.length} tg:${tgCloud()?1:0}`;
 
   const nameEl = document.getElementById('home-trainer-name');
   const avatarEl = document.getElementById('home-avatar');
@@ -1683,6 +1683,9 @@ async function main() {
   // Load latest data from server (syncs across devices)
   await loadFromServer();
 
+  // Always push current state to CloudStorage so next fresh-WebView open has data
+  tgSave();
+
   // Flush any pending market listings that failed to save last session
   if (getPendingListings().length > 0) await saveFullState();
 
@@ -1695,6 +1698,10 @@ async function main() {
     if (profAv) applyAvatarToEl(profAv, savedAvatar, letter);
     if (homeAv) applyAvatarToEl(homeAv, savedAvatar, letter);
   }
+
+  // Save to CloudStorage when page is about to unload (catches close/navigate away)
+  window.addEventListener('pagehide', tgSave);
+  window.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') tgSave(); });
 
   // Avatar picker
   document.getElementById('avatar-modal-backdrop').addEventListener('click', closeAvatarPicker);
