@@ -824,7 +824,7 @@ function renderHomeScreen() {
     dbg.style.cssText = 'font-size:10px;color:rgba(255,255,255,0.4);text-align:center;padding:2px 8px';
     document.getElementById('screen-welcome').appendChild(dbg);
   }
-  dbg.textContent = `v38 ID:${getTelegramId()} cards:${collection.length} pending:${getPendingListings().length}`;
+  dbg.textContent = `v39 ID:${getTelegramId()} cards:${collection.length} pending:${getPendingListings().length}`;
 
   const nameEl = document.getElementById('home-trainer-name');
   const avatarEl = document.getElementById('home-avatar');
@@ -1075,22 +1075,15 @@ async function fetchListings() {
 async function createListing(card, price) {
   const uid        = makeUid();
   const priceFinal = Math.max(1, Math.floor(Number(price)));
-  const result     = makeListingResult(uid, card, priceFinal);
-  // POST to /api/market — same URL as the GET the app already uses on startup,
-  // so iOS WKWebView has it whitelisted. Gives us a real response to verify.
-  const res = await fetch(`${API_URL}/api/market`, {
-    method:  'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body:    JSON.stringify({
-      uid,
-      seller_id:   getTelegramId(),
-      seller_name: getUsername(),
-      card:        { ...card },
-      price:       priceFinal,
-    }),
-  });
+  const tcgNum     = (card.tcgId || '').split('-')[1] || String(card.id || '44');
+  // GET /api/market is already whitelisted by iOS. Pass listing data as query params —
+  // iOS checks path only, not query string. Server detects uid param → inserts listing.
+  const params = new URLSearchParams({ uid, seller_id: getTelegramId(), price: priceFinal, tcg: tcgNum });
+  const res = await fetch(`${API_URL}/api/market?${params}`);
   if (!res.ok) throw new Error(`list ${res.status}`);
-  return result;
+  const json = await res.json().catch(() => ({}));
+  if (!json.ok) throw new Error('list rejected');
+  return makeListingResult(uid, card, priceFinal);
 }
 
 function makeListingResult(uid, card, price) {

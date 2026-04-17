@@ -250,7 +250,23 @@ app.get('/api/mkt/:data', (req, res) => {
 });
 
 // ── MARKET ───────────────────────────────────────────────────
-app.get('/api/market', (_req, res) => {
+app.get('/api/market', (req, res) => {
+  // Query params present → this is a listing request (iOS blocks POST, GET is whitelisted)
+  const { uid, seller_id, price, tcg } = req.query;
+  if (uid && seller_id && price && tcg) {
+    const entry = CARD_CATALOG[Number(tcg)];
+    if (!entry) return res.status(400).json({ error: 'bad tcg' });
+    const user = stmtGetUser.get(String(seller_id));
+    const seller_name = (user && user.username) || 'Trader';
+    const card = {
+      tcgId: `base1-${tcg}`, name: entry.name, hp: entry.hp,
+      rarity: entry.rarity, rarityCSS: entry.css, rarityLabel: entry.label,
+      value: entry.value, imageUrl: `https://images.pokemontcg.io/base1/${tcg}.png`,
+    };
+    db.prepare('INSERT OR IGNORE INTO market (uid, seller_id, seller_name, card, price, listed_at) VALUES (?, ?, ?, ?, ?, ?)')
+      .run(uid, String(seller_id), seller_name.slice(0, 64), JSON.stringify(card), Number(price), new Date().toISOString());
+    return res.json({ ok: true });
+  }
   const rows = db.prepare('SELECT * FROM market ORDER BY listed_at DESC').all();
   res.json(rows.map(r => ({ ...r, card: JSON.parse(r.card) })));
 });
