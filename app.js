@@ -824,7 +824,7 @@ function renderHomeScreen() {
     dbg.style.cssText = 'font-size:10px;color:rgba(255,255,255,0.4);text-align:center;padding:2px 8px';
     document.getElementById('screen-welcome').appendChild(dbg);
   }
-  dbg.textContent = `v44 ID:${getTelegramId()} cards:${collection.length} session:${_sessionListings.length}`;
+  dbg.textContent = `v45 ID:${getTelegramId()} cards:${collection.length} session:${_sessionListings.length}`;
 
   const nameEl = document.getElementById('home-trainer-name');
   const avatarEl = document.getElementById('home-avatar');
@@ -852,7 +852,7 @@ function renderHomeScreen() {
         const item = document.createElement('div');
         item.className = `deck-strip-card rarity-${card.rarityCSS}`;
         const img = document.createElement('img');
-        img.src = getSpriteUrl(card.id);
+        img.src = card.imageUrl || getSpriteUrl(card.id);
         img.alt = card.name;
         img.onerror = () => { img.style.opacity = '0.3'; };
         item.appendChild(img);
