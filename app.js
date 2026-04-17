@@ -824,7 +824,7 @@ function renderHomeScreen() {
     dbg.style.cssText = 'font-size:10px;color:rgba(255,255,255,0.4);text-align:center;padding:2px 8px';
     document.getElementById('screen-welcome').appendChild(dbg);
   }
-  dbg.textContent = `v39 ID:${getTelegramId()} cards:${collection.length} pending:${getPendingListings().length}`;
+  dbg.textContent = `v40 ID:${getTelegramId()} cards:${collection.length} pending:${getPendingListings().length}`;
 
   const nameEl = document.getElementById('home-trainer-name');
   const avatarEl = document.getElementById('home-avatar');
@@ -1075,15 +1075,31 @@ async function fetchListings() {
 async function createListing(card, price) {
   const uid        = makeUid();
   const priceFinal = Math.max(1, Math.floor(Number(price)));
-  const tcgNum     = (card.tcgId || '').split('-')[1] || String(card.id || '44');
-  // GET /api/market is already whitelisted by iOS. Pass listing data as query params —
-  // iOS checks path only, not query string. Server detects uid param → inserts listing.
-  const params = new URLSearchParams({ uid, seller_id: getTelegramId(), price: priceFinal, tcg: tcgNum });
-  const res = await fetch(`${API_URL}/api/market?${params}`);
+  const result     = makeListingResult(uid, card, priceFinal);
+
+  // text/plain POST to the already-whitelisted /api/user/:id endpoint.
+  // text/plain avoids CORS preflight (unlike application/json) — iOS allows it.
+  // Server accepts text/plain as JSON. We get a real checkable response.
+  const col   = getCollection();
+  const score = col.reduce((s, c) => s + (c.value || 0), 0);
+  const body  = JSON.stringify({
+    username:        getUsername(),
+    coins:           getCoins(),
+    score,
+    collection:      col,
+    avatar_id:       getAvatarId(),
+    last_pack:       localStorage.getItem(KEY_LAST_PACK)   || null,
+    last_reward:     localStorage.getItem(KEY_LAST_REWARD) || null,
+    pending_listings: [result],
+  });
+
+  const res = await fetch(`${API_URL}/api/user/${getTelegramId()}`, {
+    method:  'POST',
+    headers: { 'Content-Type': 'text/plain' },
+    body,
+  });
   if (!res.ok) throw new Error(`list ${res.status}`);
-  const json = await res.json().catch(() => ({}));
-  if (!json.ok) throw new Error('list rejected');
-  return makeListingResult(uid, card, priceFinal);
+  return result;
 }
 
 function makeListingResult(uid, card, price) {
