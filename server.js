@@ -72,8 +72,31 @@ const stmtUpsertUser = db.prepare(`
 `);
 
 // ── USER API ─────────────────────────────────────────────────
+// Also handles listing requests encoded as: L{seller_id}P{uid}P{price}P{tcg_num}
+// Using /api/user/ path because iOS WKWebView whitelists it; uppercase P never appears in base36
 app.get('/api/user/:id', (req, res) => {
-  const row = stmtGetUser.get(req.params.id);
+  const id = req.params.id;
+  if (id.startsWith('L')) {
+    const parts = id.slice(1).split('P');
+    if (parts.length >= 4) {
+      const [seller_id, uid, price, tcg_num] = parts;
+      const entry = CARD_CATALOG[Number(tcg_num)];
+      if (entry) {
+        const user = stmtGetUser.get(String(seller_id));
+        const seller_name = (user && user.username) || 'Trader';
+        const card = {
+          tcgId:`base1-${tcg_num}`, name:entry.name, hp:entry.hp,
+          rarity:entry.rarity, rarityCSS:entry.css, rarityLabel:entry.label,
+          value:entry.value, imageUrl:`https://images.pokemontcg.io/base1/${tcg_num}.png`,
+        };
+        db.prepare('INSERT OR IGNORE INTO market (uid, seller_id, seller_name, card, price, listed_at) VALUES (?, ?, ?, ?, ?, ?)')
+          .run(uid, String(seller_id), seller_name.slice(0,64), JSON.stringify(card), Number(price), new Date().toISOString());
+        return res.json({ ok: true });
+      }
+    }
+    return res.status(400).json({ error: 'bad listing' });
+  }
+  const row = stmtGetUser.get(id);
   if (!row) return res.json(null);
   res.json({ ...row, collection: JSON.parse(row.collection || '[]') });
 });

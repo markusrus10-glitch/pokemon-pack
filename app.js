@@ -824,7 +824,7 @@ function renderHomeScreen() {
     dbg.style.cssText = 'font-size:10px;color:rgba(255,255,255,0.4);text-align:center;padding:2px 8px';
     document.getElementById('screen-welcome').appendChild(dbg);
   }
-  dbg.textContent = `v34 ID:${getTelegramId()} cards:${collection.length} pending:${getPendingListings().length}`;
+  dbg.textContent = `v35 ID:${getTelegramId()} cards:${collection.length} pending:${getPendingListings().length}`;
 
   const nameEl = document.getElementById('home-trainer-name');
   const avatarEl = document.getElementById('home-avatar');
@@ -1075,40 +1075,18 @@ async function fetchListings() {
 async function createListing(card, price) {
   const uid        = makeUid();
   const priceFinal = Math.max(1, Math.floor(Number(price)));
-  const tcgNum  = (card.tcgId || '').split('-')[1] || '44';
-  // 3 path segments total (/api/mkt/:data) — same depth as /api/user/:id which works on iOS
-  // iOS WKWebView blocks fetch() to 4+ segment paths (confirmed: /api/market/new/data fails)
-  const data    = `${getTelegramId()}.${uid}.${priceFinal}.${tcgNum}`;
-  const listUrl = `${API_URL}/api/mkt/${data}`;
-  showToast(`⏳ /mkt/${priceFinal}.${tcgNum}`, 5000);
+  const tcgNum = (card.tcgId || '').split('-')[1] || '44';
+  // Encode listing as /api/user/L{seller}P{uid}P{price}P{tcg}
+  // Uses whitelisted /api/user/ path — iOS WKWebView allows it (same as user data fetch)
+  // Uppercase P is delimiter: never appears in base36 UID or digit fields
+  const data    = `L${getTelegramId()}P${uid}P${priceFinal}P${tcgNum}`;
+  const listUrl = `${API_URL}/api/user/${data}`;
+  showToast(`⏳ listing ${priceFinal}c #${tcgNum}`, 5000);
 
-  // 1) fetch
-  try {
-    const r = await fetch(listUrl);
-    if (r.ok) return makeListingResult(uid, card, priceFinal);
-    showToast(`fetch ${r.status}, trying XHR…`, 3000);
-  } catch (_) { showToast('fetch err, trying XHR…', 3000); }
-
-  // 2) XHR (different network stack in WKWebView)
-  try {
-    await new Promise((resolve, reject) => {
-      const x = new XMLHttpRequest();
-      x.open('GET', listUrl);
-      x.onload  = () => x.status < 400 ? resolve() : reject(new Error(`xhr${x.status}`));
-      x.onerror = () => reject(new Error('xhrerr'));
-      x.send();
-    });
-    return makeListingResult(uid, card, priceFinal);
-  } catch (e2) { showToast(`XHR: ${e2.message}, img…`, 3000); }
-
-  // 3) Image() resource load — bypasses fetch/XHR restrictions entirely
-  await new Promise(resolve => {
-    const img = new Image();
-    img.onload = img.onerror = resolve;
-    setTimeout(resolve, 4000);
-    img.src = listUrl;
-  });
-  // fire-and-forget: assume server processed it
+  const r = await fetch(listUrl);
+  if (!r.ok) throw new Error(`list ${r.status}`);
+  const json = await r.json().catch(() => ({}));
+  if (!json.ok) throw new Error('list rejected');
   return makeListingResult(uid, card, priceFinal);
 }
 
