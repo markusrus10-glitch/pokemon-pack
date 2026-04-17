@@ -409,6 +409,8 @@ async function loadFromServer() {
     if (data.username)    localStorage.setItem(KEY_USERNAME,    data.username);
     // Bonus packs from server (source of truth)
     if (data.bonus_packs > getBonusPacks()) setBonusPacks(data.bonus_packs);
+    // Bot deep link (needed for referral share button)
+    if (data.botDeepLink) _botDeepLink = data.botDeepLink;
   } catch {}
 }
 
@@ -908,7 +910,7 @@ function renderHomeScreen() {
     dbg.style.cssText = 'font-size:10px;color:rgba(255,255,255,0.4);text-align:center;padding:2px 8px';
     document.getElementById('screen-welcome').appendChild(dbg);
   }
-  dbg.textContent = `v49 ID:${getTelegramId()} cards:${collection.length} tg:${tgCloud()?1:0}`;
+  dbg.textContent = `v50 ID:${getTelegramId()} cards:${collection.length} tg:${tgCloud()?1:0}`;
 
   const nameEl = document.getElementById('home-trainer-name');
   const avatarEl = document.getElementById('home-avatar');
@@ -1012,16 +1014,17 @@ async function shareReferralLink() {
   const userId = getTelegramId();
   if (!userId) { showToast('Not logged in'); return; }
 
-  if (_botDeepLink === null) {
+  if (!_botDeepLink) {
+    showToast('Загрузка...');
     try {
-      const r = await fetch(`${API_URL}/api/config`);
-      const cfg = await r.json();
-      _botDeepLink = cfg.botDeepLink || '';
-    } catch { _botDeepLink = ''; }
+      const r = await fetch(`${API_URL}/api/user/${userId}`);
+      const d = await r.json();
+      if (d?.botDeepLink) _botDeepLink = d.botDeepLink;
+    } catch {}
   }
 
   if (!_botDeepLink) {
-    showToast('Bot link not configured on server');
+    showToast('Ссылка не настроена на сервере');
     return;
   }
 

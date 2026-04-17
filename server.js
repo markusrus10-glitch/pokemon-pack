@@ -106,8 +106,8 @@ app.get('/api/user/:id', (req, res) => {
     return res.status(400).json({ error: 'bad listing' });
   }
   const row = stmtGetUser.get(id);
-  if (!row) return res.json(null);
-  res.json({ ...row, collection: JSON.parse(row.collection || '[]'), bonus_packs: row.bonus_packs || 0 });
+  if (!row) return res.json({ botDeepLink: BOT_DEEP_LINK });
+  res.json({ ...row, collection: JSON.parse(row.collection || '[]'), bonus_packs: row.bonus_packs || 0, botDeepLink: BOT_DEEP_LINK });
 });
 
 const stmtInsertListing = db.prepare(`
