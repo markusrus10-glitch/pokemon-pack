@@ -410,7 +410,10 @@ async function loadFromServer() {
     // Bonus packs from server (source of truth)
     if (data.bonus_packs > getBonusPacks()) setBonusPacks(data.bonus_packs);
     // Bot deep link (needed for referral share button)
-    if (data.botDeepLink) _botDeepLink = data.botDeepLink;
+    if (data.botDeepLink) {
+      _botDeepLink = data.botDeepLink;
+      localStorage.setItem('pokemon_bot_link_v1', data.botDeepLink);
+    }
   } catch {}
 }
 
@@ -913,7 +916,7 @@ function renderHomeScreen() {
     dbg.style.cssText = 'font-size:10px;color:rgba(255,255,255,0.4);text-align:center;padding:2px 8px';
     document.getElementById('screen-welcome').appendChild(dbg);
   }
-  dbg.textContent = `v51 ID:${getTelegramId()} cards:${collection.length} tg:${tgCloud()?1:0}`;
+  dbg.textContent = `v52 ID:${getTelegramId()} cards:${collection.length} tg:${tgCloud()?1:0}`;
 
   const nameEl = document.getElementById('home-trainer-name');
   const avatarEl = document.getElementById('home-avatar');
@@ -1011,25 +1014,11 @@ async function openBonusPack() {
   }
 }
 
-let _botDeepLink = null;
+let _botDeepLink = localStorage.getItem('pokemon_bot_link_v1') || 'https://t.me/pokemontcgw_bot';
 
 async function shareReferralLink() {
   const userId = getTelegramId();
   if (!userId) { showToast('Not logged in'); return; }
-
-  if (!_botDeepLink) {
-    showToast('Загрузка...');
-    try {
-      const r = await fetch(`${API_URL}/api/user/${userId}`);
-      const d = await r.json();
-      if (d?.botDeepLink) _botDeepLink = d.botDeepLink;
-    } catch {}
-  }
-
-  if (!_botDeepLink) {
-    showToast('Ссылка не настроена на сервере');
-    return;
-  }
 
   const refUrl  = `${_botDeepLink}?startapp=ref_${userId}`;
   const text    = 'Join me in Pokémon TCG: Packs! 🎮 Open your first pack and we both get a bonus!';
@@ -1855,9 +1844,6 @@ async function main() {
   document.getElementById('btn-list-cancel').addEventListener('click', closeListModal);
   document.getElementById('list-modal-backdrop').addEventListener('click', closeListModal);
 
-  // Wire up bonus pack & referral (home screen)
-  document.getElementById('btn-open-bonus-pack')?.addEventListener('click', openBonusPack);
-  document.getElementById('btn-share-referral')?.addEventListener('click', shareReferralLink);
   // Wire up referral screen buttons
   document.getElementById('ref-btn-share')?.addEventListener('click', shareReferralLink);
   document.getElementById('ref-btn-open-bonus')?.addEventListener('click', async () => {
