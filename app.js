@@ -824,7 +824,7 @@ function renderHomeScreen() {
     dbg.style.cssText = 'font-size:10px;color:rgba(255,255,255,0.4);text-align:center;padding:2px 8px';
     document.getElementById('screen-welcome').appendChild(dbg);
   }
-  dbg.textContent = `v42 ID:${getTelegramId()} cards:${collection.length} pending:${getPendingListings().length}`;
+  dbg.textContent = `v43 ID:${getTelegramId()} cards:${collection.length} session:${_sessionListings.length}`;
 
   const nameEl = document.getElementById('home-trainer-name');
   const avatarEl = document.getElementById('home-avatar');
@@ -1046,19 +1046,25 @@ function confirmSell() {
 // ============================================================
 
 function getMyListings() {
-  try { return JSON.parse(localStorage.getItem(KEY_MY_LISTINGS)) || []; } catch { return []; }
+  try {
+    const arr = JSON.parse(localStorage.getItem(KEY_MY_LISTINGS)) || [];
+    return arr.filter(l => l.uid && l.card && l.price); // drop old {uid,card}-only entries
+  } catch { return []; }
 }
 function saveMyListings(arr) {
   try { localStorage.setItem(KEY_MY_LISTINGS, JSON.stringify(arr)); } catch {}
 }
 function addMyListingLocal(listing) {
   const mine = getMyListings();
-  mine.push(listing); // store full object so price/seller fields are available for market display
+  if (!mine.some(l => l.uid === listing.uid)) mine.push(listing);
   saveMyListings(mine);
 }
 function removeMyListingLocal(uid) {
   saveMyListings(getMyListings().filter(l => l.uid !== uid));
 }
+
+// In-memory cache: listings created this session — shown immediately without waiting for server
+const _sessionListings = [];
 
 // ============================================================
 // MARKETPLACE — API
@@ -1092,6 +1098,7 @@ async function createListing(card, price) {
     pending_listings: [result],
   });
   navigator.sendBeacon(`${API_URL}/api/user/${getTelegramId()}`, payload);
+  _sessionListings.push(result); // instant local display this session
   return result;
 }
 
@@ -1156,10 +1163,10 @@ async function renderMarketScreen() {
   const myName = getUsername();
   const myId   = getTelegramId();
   const myCoins = getCoins();
-  const myLocalListings = getMyListings();
+  const myLocalListings = [..._sessionListings, ...getMyListings()];
   const myListingUids   = new Set(myLocalListings.map(l => l.uid));
 
-  // Merge: local listings show immediately (optimistic), server listings deduplicated by uid
+  // Show local listings immediately (optimistic) — dedup by uid against server response
   const serverUids   = new Set(listings.map(l => l.uid));
   const localPending = myLocalListings.filter(l => !serverUids.has(l.uid));
   listings = [...localPending, ...listings];
