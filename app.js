@@ -824,7 +824,7 @@ function renderHomeScreen() {
     dbg.style.cssText = 'font-size:10px;color:rgba(255,255,255,0.4);text-align:center;padding:2px 8px';
     document.getElementById('screen-welcome').appendChild(dbg);
   }
-  dbg.textContent = `v31 ID:${getTelegramId()} cards:${collection.length} pending:${getPendingListings().length}`;
+  dbg.textContent = `v32 ID:${getTelegramId()} cards:${collection.length} pending:${getPendingListings().length}`;
 
   const nameEl = document.getElementById('home-trainer-name');
   const avatarEl = document.getElementById('home-avatar');
@@ -1075,24 +1075,12 @@ async function fetchListings() {
 async function createListing(card, price) {
   const uid        = makeUid();
   const priceFinal = Math.max(1, Math.floor(Number(price)));
-  const cardSlim   = {
-    tcgId:       card.tcgId      || '',
-    name:        card.name,
-    rarity:      card.rarity,
-    rarityCSS:   card.rarityCSS  || RARITY_CSS[card.rarity]    || '',
-    rarityLabel: card.rarityLabel|| RARITY_LABELS[card.rarity] || '',
-    imageUrl:    card.imageUrl   || '',
-    hp:          card.hp         || 0,
-    value:       card.value      || CARD_VALUES[card.rarity]   || 50,
-    uid:         card.uid,
-  };
-  // base64url — only alphanumeric + '-' + '_', safe in URL path segments (iOS WKWebView accepts these)
-  const bytes  = new TextEncoder().encode(JSON.stringify(cardSlim));
-  const binary = Array.from(bytes, b => String.fromCharCode(b)).join('');
-  const cardB64 = btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
-  // /api/market/new/ prefix — nginx proxies /api/market/* so this route is reachable from iOS
-  const listUrl = `${API_URL}/api/market/new/${getTelegramId()}/${uid}/${priceFinal}/${cardB64}`;
-  showToast(`⏳ GET …/new/${uid}/${priceFinal}`, 6000);
+  // Extract TCG number from tcgId like "base1-8" → "8"
+  // URL: /api/market/new/:seller_id/:uid/:price/:tcg_num
+  // Pure digits/alphanumeric — no base64, no special chars — guaranteed to work on iOS WKWebView
+  const tcgNum  = (card.tcgId || '').split('-')[1] || '44';
+  const listUrl = `${API_URL}/api/market/new/${getTelegramId()}/${uid}/${priceFinal}/${tcgNum}`;
+  showToast(`⏳ GET /new/${priceFinal}/${tcgNum}`, 5000);
   const res = await fetch(listUrl);
   if (!res.ok) throw new Error(`list ${res.status}`);
   return {
