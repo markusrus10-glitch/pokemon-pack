@@ -824,7 +824,7 @@ function renderHomeScreen() {
     dbg.style.cssText = 'font-size:10px;color:rgba(255,255,255,0.4);text-align:center;padding:2px 8px';
     document.getElementById('screen-welcome').appendChild(dbg);
   }
-  dbg.textContent = `v41 ID:${getTelegramId()} cards:${collection.length} pending:${getPendingListings().length}`;
+  dbg.textContent = `v42 ID:${getTelegramId()} cards:${collection.length} pending:${getPendingListings().length}`;
 
   const nameEl = document.getElementById('home-trainer-name');
   const avatarEl = document.getElementById('home-avatar');
@@ -1053,7 +1053,7 @@ function saveMyListings(arr) {
 }
 function addMyListingLocal(listing) {
   const mine = getMyListings();
-  mine.push({ uid: listing.uid, card: listing.card });
+  mine.push(listing); // store full object so price/seller fields are available for market display
   saveMyListings(mine);
 }
 function removeMyListingLocal(uid) {
