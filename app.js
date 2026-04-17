@@ -824,7 +824,7 @@ function renderHomeScreen() {
     dbg.style.cssText = 'font-size:10px;color:rgba(255,255,255,0.4);text-align:center;padding:2px 8px';
     document.getElementById('screen-welcome').appendChild(dbg);
   }
-  dbg.textContent = `v36 ID:${getTelegramId()} cards:${collection.length} pending:${getPendingListings().length}`;
+  dbg.textContent = `v37 ID:${getTelegramId()} cards:${collection.length} pending:${getPendingListings().length}`;
 
   const nameEl = document.getElementById('home-trainer-name');
   const avatarEl = document.getElementById('home-avatar');
@@ -1075,19 +1075,13 @@ async function fetchListings() {
 async function createListing(card, price) {
   const uid        = makeUid();
   const priceFinal = Math.max(1, Math.floor(Number(price)));
-  const tcgNum = (card.tcgId || '').split('-')[1] || '44';
-  // Piggyback on whitelisted /api/user/:id endpoint.
-  // iOS WKWebView in Telegram whitelists paths seen at startup; only lowercase+underscore
-  // matches the pattern of existing working ids (e.g. dev_mo2lw80e).
-  const data    = `sell_${getTelegramId()}_${uid}_${priceFinal}_${tcgNum}`;
-  const listUrl = `${API_URL}/api/user/${data}`;
-  showToast(`⏳ listing ${priceFinal}c #${tcgNum}`, 5000);
-
-  const r = await fetch(listUrl);
-  if (!r.ok) throw new Error(`list ${r.status}`);
-  const json = await r.json().catch(() => ({}));
-  if (!json.ok) throw new Error('list rejected');
-  return makeListingResult(uid, card, priceFinal);
+  const result     = makeListingResult(uid, card, priceFinal);
+  // iOS WKWebView blocks every new GET path — even /api/user/sell_xxx.
+  // sendBeacon POST to /api/user/:id is already whitelisted (same path as saveFullState).
+  // Server already processes pending_listings[] from the POST body → inserts into market.
+  addPendingListing(result);
+  await saveFullState();
+  return result;
 }
 
 function makeListingResult(uid, card, price) {
