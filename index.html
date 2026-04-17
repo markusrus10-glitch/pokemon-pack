@@ -7,7 +7,7 @@
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
   <title>Pokémon TCG: Packs</title>
-  <link rel="stylesheet" href="style.css?v=50" />
+  <link rel="stylesheet" href="style.css?v=51" />
 </head>
 <body>
 
@@ -194,6 +194,43 @@
     </div>
   </div>
 
+  <!-- ======= SCREEN 7: Referral ======= -->
+  <div id="screen-referral" class="screen hidden has-nav">
+    <h2 class="page-title">Invite Friends</h2>
+    <p class="page-subtitle">Share your link — get a bonus pack for each friend</p>
+
+    <!-- Bonus packs available -->
+    <div class="ref-bonus-card" id="ref-bonus-card">
+      <div class="ref-bonus-icon">🎁</div>
+      <div class="ref-bonus-info">
+        <div class="ref-bonus-title">Bonus Packs Ready</div>
+        <div class="ref-bonus-count" id="ref-bonus-count">0</div>
+      </div>
+      <button class="btn-bonus-open" id="ref-btn-open-bonus" style="width:auto;padding:10px 20px">Open</button>
+    </div>
+
+    <!-- Share section -->
+    <div class="home-section ref-share-section">
+      <div class="home-section-header">
+        <span class="home-section-title">Your Referral Link</span>
+      </div>
+      <div class="ref-link-box" id="ref-link-box">Loading...</div>
+      <button class="btn-battle small" id="ref-btn-share" style="margin-top:12px;width:100%">📣 Share in Telegram</button>
+    </div>
+
+    <!-- How it works -->
+    <div class="home-section">
+      <div class="home-section-header">
+        <span class="home-section-title">How it works</span>
+      </div>
+      <div class="ref-steps">
+        <div class="ref-step"><span class="ref-step-num">1</span><span>Share your link with a friend</span></div>
+        <div class="ref-step"><span class="ref-step-num">2</span><span>Friend opens the app and opens their first pack</span></div>
+        <div class="ref-step"><span class="ref-step-num">3</span><span>You get a free bonus pack!</span></div>
+      </div>
+    </div>
+  </div>
+
   <!-- ======= BOTTOM NAV ======= -->
   <nav class="main-nav" id="main-nav">
     <button class="nav-tab active" id="nav-home" onclick="navigate('home')">
@@ -211,6 +248,10 @@
     <button class="nav-tab" id="nav-market" onclick="navigate('market')">
       <span class="nav-ico">🛒</span>
       <span class="nav-lbl">Market</span>
+    </button>
+    <button class="nav-tab" id="nav-referral" onclick="navigate('referral')">
+      <span class="nav-ico">📣</span>
+      <span class="nav-lbl">Invite</span>
     </button>
   </nav>
 
@@ -276,6 +317,6 @@
   </div>
 
   <script src="https://telegram.org/js/telegram-web-app.js" defer></script>
-  <script src="app.js?v=50" defer></script>
+  <script src="app.js?v=51" defer></script>
 </body>
 </html>

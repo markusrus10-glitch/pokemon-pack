@@ -680,6 +680,9 @@ function showLoading(show) {
   } else if (dest === 'market') {
     showScreen('market', 'market');
     renderMarketScreen();
+  } else if (dest === 'referral') {
+    showScreen('referral', 'referral');
+    renderReferralScreen();
   }
 };
 
@@ -910,7 +913,7 @@ function renderHomeScreen() {
     dbg.style.cssText = 'font-size:10px;color:rgba(255,255,255,0.4);text-align:center;padding:2px 8px';
     document.getElementById('screen-welcome').appendChild(dbg);
   }
-  dbg.textContent = `v50 ID:${getTelegramId()} cards:${collection.length} tg:${tgCloud()?1:0}`;
+  dbg.textContent = `v51 ID:${getTelegramId()} cards:${collection.length} tg:${tgCloud()?1:0}`;
 
   const nameEl = document.getElementById('home-trainer-name');
   const avatarEl = document.getElementById('home-avatar');
@@ -1037,6 +1040,32 @@ async function shareReferralLink() {
   } catch {
     try { await navigator.clipboard.writeText(refUrl); showToast('Link copied!'); } catch { showToast(refUrl); }
   }
+}
+
+async function renderReferralScreen() {
+  const userId = getTelegramId();
+  const bonus  = getBonusPacks();
+
+  // Bonus packs section
+  const countEl = document.getElementById('ref-bonus-count');
+  if (countEl) countEl.textContent = String(bonus);
+  const bonusCard = document.getElementById('ref-bonus-card');
+  if (bonusCard) bonusCard.style.opacity = bonus > 0 ? '1' : '0.45';
+  const openBtn = document.getElementById('ref-btn-open-bonus');
+  if (openBtn) openBtn.disabled = bonus <= 0;
+
+  // Load bot link if not cached yet
+  if (!_botDeepLink) {
+    try {
+      const r = await fetch(`${API_URL}/api/user/${userId}`);
+      const d = await r.json();
+      if (d?.botDeepLink) _botDeepLink = d.botDeepLink;
+    } catch {}
+  }
+
+  const refUrl = _botDeepLink ? `${_botDeepLink}?startapp=ref_${userId}` : '—';
+  const linkBox = document.getElementById('ref-link-box');
+  if (linkBox) linkBox.textContent = refUrl;
 }
 
 // ============================================================
@@ -1826,9 +1855,15 @@ async function main() {
   document.getElementById('btn-list-cancel').addEventListener('click', closeListModal);
   document.getElementById('list-modal-backdrop').addEventListener('click', closeListModal);
 
-  // Wire up bonus pack & referral
+  // Wire up bonus pack & referral (home screen)
   document.getElementById('btn-open-bonus-pack')?.addEventListener('click', openBonusPack);
   document.getElementById('btn-share-referral')?.addEventListener('click', shareReferralLink);
+  // Wire up referral screen buttons
+  document.getElementById('ref-btn-share')?.addEventListener('click', shareReferralLink);
+  document.getElementById('ref-btn-open-bonus')?.addEventListener('click', async () => {
+    await openBonusPack();
+    renderReferralScreen();
+  });
 
   // Wire up rating refresh
   document.getElementById('btn-refresh-rating').addEventListener('click', loadRatingScreen);

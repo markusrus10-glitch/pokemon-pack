@@ -34,7 +34,7 @@ app.use(express.static(__dirname));
 
 // ── DB INIT ──────────────────────────────────────────────────
 // Bot deep link prefix for referral links — set this to your bot's startapp link
-const BOT_DEEP_LINK = process.env.BOT_DEEP_LINK || '';
+const BOT_DEEP_LINK = process.env.BOT_DEEP_LINK || 'https://t.me/pokemontcgw_bot';
 
 db.exec(`
   CREATE TABLE IF NOT EXISTS users (

@@ -874,7 +874,35 @@ html, body {
 @keyframes spin { to{transform:rotate(360deg)} }
 
 /* ============================================================
-   BONUS PACKS / REFERRAL
+   REFERRAL SCREEN
+   ============================================================ */
+.ref-bonus-card {
+  width: 100%; background: linear-gradient(135deg, #2a1f5e, #1a1040);
+  border: 1px solid var(--gold); border-radius: var(--r);
+  padding: 16px; margin-bottom: 12px; flex-shrink: 0;
+  display: flex; align-items: center; gap: 14px;
+}
+.ref-bonus-icon { font-size: 2rem; flex-shrink: 0; }
+.ref-bonus-info { flex: 1; min-width: 0; }
+.ref-bonus-title { font-size: 0.78rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+.ref-bonus-count { font-size: 2rem; font-weight: 900; color: var(--gold); line-height: 1.1; }
+.ref-link-box {
+  width: 100%; background: rgba(0,0,0,0.3); border: 1px solid var(--border);
+  border-radius: 10px; padding: 10px 12px;
+  font-size: 0.75rem; color: var(--text-muted);
+  word-break: break-all; line-height: 1.5; box-sizing: border-box;
+}
+.ref-steps { display: flex; flex-direction: column; gap: 12px; }
+.ref-step { display: flex; align-items: flex-start; gap: 12px; font-size: 0.88rem; color: rgba(255,255,255,0.8); line-height: 1.4; }
+.ref-step-num {
+  min-width: 26px; height: 26px; border-radius: 50%;
+  background: var(--red); color: #fff;
+  font-size: 0.78rem; font-weight: 800;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+
+/* ============================================================
+   BONUS PACKS / REFERRAL HOME
    ============================================================ */
 .bonus-count-badge {
   background: var(--gold); color: #111;
