@@ -824,7 +824,7 @@ function renderHomeScreen() {
     dbg.style.cssText = 'font-size:10px;color:rgba(255,255,255,0.4);text-align:center;padding:2px 8px';
     document.getElementById('screen-welcome').appendChild(dbg);
   }
-  dbg.textContent = `v40 ID:${getTelegramId()} cards:${collection.length} pending:${getPendingListings().length}`;
+  dbg.textContent = `v41 ID:${getTelegramId()} cards:${collection.length} pending:${getPendingListings().length}`;
 
   const nameEl = document.getElementById('home-trainer-name');
   const avatarEl = document.getElementById('home-avatar');
@@ -1077,28 +1077,21 @@ async function createListing(card, price) {
   const priceFinal = Math.max(1, Math.floor(Number(price)));
   const result     = makeListingResult(uid, card, priceFinal);
 
-  // text/plain POST to the already-whitelisted /api/user/:id endpoint.
-  // text/plain avoids CORS preflight (unlike application/json) — iOS allows it.
-  // Server accepts text/plain as JSON. We get a real checkable response.
-  const col   = getCollection();
-  const score = col.reduce((s, c) => s + (c.value || 0), 0);
-  const body  = JSON.stringify({
-    username:        getUsername(),
-    coins:           getCoins(),
-    score,
-    collection:      col,
-    avatar_id:       getAvatarId(),
-    last_pack:       localStorage.getItem(KEY_LAST_PACK)   || null,
-    last_reward:     localStorage.getItem(KEY_LAST_REWARD) || null,
+  // iOS WKWebView blocks all fetch() POST → 405. Only sendBeacon bypasses it.
+  // sendBeacon embeds the listing in pending_listings of the normal user-save payload.
+  // The listing is also stored in myListings (localStorage) for immediate local display.
+  const col     = getCollection();
+  const payload = JSON.stringify({
+    username:         getUsername(),
+    coins:            getCoins(),
+    score:            col.reduce((s, c) => s + (c.value || 0), 0),
+    collection:       col,
+    avatar_id:        getAvatarId(),
+    last_pack:        localStorage.getItem(KEY_LAST_PACK)   || null,
+    last_reward:      localStorage.getItem(KEY_LAST_REWARD) || null,
     pending_listings: [result],
   });
-
-  const res = await fetch(`${API_URL}/api/user/${getTelegramId()}`, {
-    method:  'POST',
-    headers: { 'Content-Type': 'text/plain' },
-    body,
-  });
-  if (!res.ok) throw new Error(`list ${res.status}`);
+  navigator.sendBeacon(`${API_URL}/api/user/${getTelegramId()}`, payload);
   return result;
 }
 
@@ -1163,8 +1156,13 @@ async function renderMarketScreen() {
   const myName = getUsername();
   const myId   = getTelegramId();
   const myCoins = getCoins();
-  const myListingUids = new Set(getMyListings().map(l => l.uid));
-  console.log('[Market] myId:', myId, 'myName:', myName, 'myListings:', [...myListingUids]);
+  const myLocalListings = getMyListings();
+  const myListingUids   = new Set(myLocalListings.map(l => l.uid));
+
+  // Merge: local listings show immediately (optimistic), server listings deduplicated by uid
+  const serverUids   = new Set(listings.map(l => l.uid));
+  const localPending = myLocalListings.filter(l => !serverUids.has(l.uid));
+  listings = [...localPending, ...listings];
 
   if (listings.length === 0) {
     list.innerHTML = '<div class="market-empty">No listings yet.<br>List cards from your profile!</div>';
