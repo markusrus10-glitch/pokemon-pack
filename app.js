@@ -824,7 +824,7 @@ function renderHomeScreen() {
     dbg.style.cssText = 'font-size:10px;color:rgba(255,255,255,0.4);text-align:center;padding:2px 8px';
     document.getElementById('screen-welcome').appendChild(dbg);
   }
-  dbg.textContent = `v37 ID:${getTelegramId()} cards:${collection.length} pending:${getPendingListings().length}`;
+  dbg.textContent = `v38 ID:${getTelegramId()} cards:${collection.length} pending:${getPendingListings().length}`;
 
   const nameEl = document.getElementById('home-trainer-name');
   const avatarEl = document.getElementById('home-avatar');
@@ -1076,11 +1076,20 @@ async function createListing(card, price) {
   const uid        = makeUid();
   const priceFinal = Math.max(1, Math.floor(Number(price)));
   const result     = makeListingResult(uid, card, priceFinal);
-  // iOS WKWebView blocks every new GET path — even /api/user/sell_xxx.
-  // sendBeacon POST to /api/user/:id is already whitelisted (same path as saveFullState).
-  // Server already processes pending_listings[] from the POST body → inserts into market.
-  addPendingListing(result);
-  await saveFullState();
+  // POST to /api/market — same URL as the GET the app already uses on startup,
+  // so iOS WKWebView has it whitelisted. Gives us a real response to verify.
+  const res = await fetch(`${API_URL}/api/market`, {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body:    JSON.stringify({
+      uid,
+      seller_id:   getTelegramId(),
+      seller_name: getUsername(),
+      card:        { ...card },
+      price:       priceFinal,
+    }),
+  });
+  if (!res.ok) throw new Error(`list ${res.status}`);
   return result;
 }
 
