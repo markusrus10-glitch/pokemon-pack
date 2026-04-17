@@ -824,7 +824,7 @@ function renderHomeScreen() {
     dbg.style.cssText = 'font-size:10px;color:rgba(255,255,255,0.4);text-align:center;padding:2px 8px';
     document.getElementById('screen-welcome').appendChild(dbg);
   }
-  dbg.textContent = `v43 ID:${getTelegramId()} cards:${collection.length} session:${_sessionListings.length}`;
+  dbg.textContent = `v44 ID:${getTelegramId()} cards:${collection.length} session:${_sessionListings.length}`;
 
   const nameEl = document.getElementById('home-trainer-name');
   const avatarEl = document.getElementById('home-avatar');
@@ -1301,6 +1301,9 @@ function openListModal(card) {
 function closeListModal() {
   document.getElementById('list-modal').classList.add('hidden');
   listTargetCard = null;
+  const btn = document.getElementById('btn-list-confirm');
+  btn.disabled = false;
+  btn.textContent = 'List';
 }
 
 async function confirmListing() {
