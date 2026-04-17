@@ -127,6 +127,17 @@ app.get('/api/leaderboard', (_req, res) => {
   res.json(rows);
 });
 
+// ── MARKET LIST VIA GET (iOS workaround — GET never blocked by WKWebView) ────
+app.get('/api/list', (req, res) => {
+  const { uid, seller_id, seller_name, card, price } = req.query;
+  if (!uid || !seller_id || !card || !price) return res.status(400).json({ error: 'missing fields' });
+  try {
+    db.prepare('INSERT OR IGNORE INTO market (uid, seller_id, seller_name, card, price, listed_at) VALUES (?, ?, ?, ?, ?, ?)')
+      .run(uid, String(seller_id), String(seller_name || 'Trader').slice(0, 64), card, Number(price), new Date().toISOString());
+    res.json({ ok: true });
+  } catch { res.status(500).json({ error: 'db error' }); }
+});
+
 // ── MARKET ───────────────────────────────────────────────────
 app.get('/api/market', (_req, res) => {
   const rows = db.prepare('SELECT * FROM market ORDER BY listed_at DESC').all();

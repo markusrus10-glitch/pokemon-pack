@@ -824,7 +824,7 @@ function renderHomeScreen() {
     dbg.style.cssText = 'font-size:10px;color:rgba(255,255,255,0.4);text-align:center;padding:2px 8px';
     document.getElementById('screen-welcome').appendChild(dbg);
   }
-  dbg.textContent = `v28 ID:${getTelegramId()} cards:${collection.length} pending:${getPendingListings().length}`;
+  dbg.textContent = `v29 ID:${getTelegramId()} cards:${collection.length} pending:${getPendingListings().length}`;
 
   const nameEl = document.getElementById('home-trainer-name');
   const avatarEl = document.getElementById('home-avatar');
@@ -1073,17 +1073,27 @@ async function fetchListings() {
 }
 
 async function createListing(card, price) {
-  const uid = makeUid();
-  const listing = {
+  const uid       = makeUid();
+  const priceFinal = Math.max(1, Math.floor(Number(price)));
+  // Use GET request — never blocked by iOS WKWebView CORS policy
+  const params = new URLSearchParams({
     uid,
     seller_id:   getTelegramId(),
     seller_name: getUsername(),
+    card:        JSON.stringify({ ...card }),
+    price:       String(priceFinal),
+  });
+  const res = await fetch(`${API_URL}/api/list?${params}`);
+  if (!res.ok) throw new Error(`list ${res.status}`);
+  return {
+    uid,
+    seller_id:   getTelegramId(),
+    seller_name: getUsername(),
+    sellerName:  getUsername(),
     card:        { ...card },
-    price:       Math.max(1, Math.floor(Number(price))),
+    price:       priceFinal,
+    listedAt:    new Date().toISOString(),
   };
-  // Store as pending — submitted via POST /api/user/:id (avoids iOS POST /api/market issue)
-  addPendingListing(listing);
-  return { ...listing, sellerName: listing.seller_name, listedAt: new Date().toISOString() };
 }
 
 async function removeListingRemote(uid) {
@@ -1282,8 +1292,8 @@ async function confirmListing() {
   btn.textContent = '...';
 
   try {
-    showToast('⏳ step 1: creating...');
-    const listing = await createListing(listTargetCard, price);
+    showToast('⏳ Listing...');
+    const listing = await createListing(listTargetCard, price); // GET → works on iOS
     addMyListingLocal(listing);
 
     const col = getCollection();
@@ -1293,16 +1303,14 @@ async function confirmListing() {
 
     haptic('medium');
     closeListModal();
-
-    showToast('⏳ step 2: saving to server...');
-    const ok = await saveFullState();
-    showToast(ok ? '✓ Listed on market!' : '⚠ No connection — queued');
+    showToast('✓ Listed on market!');
 
     renderProfileScreen();
     renderHomeScreen();
+    saveFullState(); // fire-and-forget: sync coins/score
   } catch (err) {
     console.error('[confirmListing] failed:', err);
-    showToast('✗ Error: ' + (err?.message || 'unknown'));
+    showToast('✗ ' + (err?.message || 'error'));
     btn.disabled = false;
     btn.textContent = 'List';
   }
