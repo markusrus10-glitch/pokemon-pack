@@ -127,9 +127,10 @@ app.get('/api/leaderboard', (_req, res) => {
   res.json(rows);
 });
 
-// ── MARKET LIST VIA GET PATH PARAMS (iOS: query strings blocked, path params work) ─
-// URL: /api/list/:seller_id/:uid/:price/:cardBase64url
-app.get('/api/list/:seller_id/:uid/:price/:card', (req, res) => {
+// ── MARKET LIST VIA GET PATH PARAMS ──────────────────────────
+// /api/market/new/:seller_id/:uid/:price/:cardBase64url
+// Uses /api/market prefix so nginx proxy rule covers it (iOS blocks all POST + query strings)
+app.get('/api/market/new/:seller_id/:uid/:price/:card', (req, res) => {
   try {
     const { seller_id, uid, price, card: cardB64 } = req.params;
     if (!seller_id || !uid || !price || !cardB64) return res.status(400).json({ error: 'missing' });
@@ -139,7 +140,7 @@ app.get('/api/list/:seller_id/:uid/:price/:card', (req, res) => {
     db.prepare('INSERT OR IGNORE INTO market (uid, seller_id, seller_name, card, price, listed_at) VALUES (?, ?, ?, ?, ?, ?)')
       .run(uid, String(seller_id), seller_name.slice(0, 64), JSON.stringify(card), Number(price), new Date().toISOString());
     res.json({ ok: true });
-  } catch (e) { res.status(400).json({ error: 'invalid' }); }
+  } catch (e) { res.status(400).json({ error: String(e?.message || 'invalid') }); }
 });
 
 // ── MARKET ───────────────────────────────────────────────────

@@ -824,7 +824,7 @@ function renderHomeScreen() {
     dbg.style.cssText = 'font-size:10px;color:rgba(255,255,255,0.4);text-align:center;padding:2px 8px';
     document.getElementById('screen-welcome').appendChild(dbg);
   }
-  dbg.textContent = `v30 ID:${getTelegramId()} cards:${collection.length} pending:${getPendingListings().length}`;
+  dbg.textContent = `v31 ID:${getTelegramId()} cards:${collection.length} pending:${getPendingListings().length}`;
 
   const nameEl = document.getElementById('home-trainer-name');
   const avatarEl = document.getElementById('home-avatar');
@@ -1090,7 +1090,10 @@ async function createListing(card, price) {
   const bytes  = new TextEncoder().encode(JSON.stringify(cardSlim));
   const binary = Array.from(bytes, b => String.fromCharCode(b)).join('');
   const cardB64 = btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
-  const res = await fetch(`${API_URL}/api/list/${getTelegramId()}/${uid}/${priceFinal}/${cardB64}`);
+  // /api/market/new/ prefix — nginx proxies /api/market/* so this route is reachable from iOS
+  const listUrl = `${API_URL}/api/market/new/${getTelegramId()}/${uid}/${priceFinal}/${cardB64}`;
+  showToast(`⏳ GET …/new/${uid}/${priceFinal}`, 6000);
+  const res = await fetch(listUrl);
   if (!res.ok) throw new Error(`list ${res.status}`);
   return {
     uid,
