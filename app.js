@@ -104,6 +104,8 @@ const KEY_AVATAR        = 'pokemon_avatar_v1';
 const KEY_OLD_PACK      = 'pokemon_pack_v1';
 const KEY_MY_LISTINGS   = 'pokemon_my_listings_v1';
 const KEY_PENDING_LIST  = 'pokemon_pending_listings_v1';
+const KEY_REFERRER      = 'pokemon_referrer_v1';
+const KEY_BONUS_PACKS   = 'pokemon_bonus_packs_v1';
 
 // Server API (same-origin — served by our own Node.js server)
 const API_URL = '';
@@ -224,6 +226,16 @@ function addCoins(amount) {
   localStorage.setItem(KEY_COINS, String(getCoins() + amount));
 }
 
+function getBonusPacks() {
+  return parseInt(localStorage.getItem(KEY_BONUS_PACKS) || '0', 10);
+}
+function setBonusPacks(n) {
+  localStorage.setItem(KEY_BONUS_PACKS, String(Math.max(0, n)));
+}
+function getReferrerId() {
+  return localStorage.getItem(KEY_REFERRER) || null;
+}
+
 function getUsername() {
   return localStorage.getItem(KEY_USERNAME) || 'Trainer';
 }
@@ -333,7 +345,7 @@ async function tgLoad() {
   });
 }
 
-async function saveFullState() {
+async function saveFullState(opts = {}) {
   tgSave(); // always sync to Telegram CloudStorage (works on iOS without POST)
   const url = `${API_URL}/api/user/${getTelegramId()}`;
   const col     = getCollection();
@@ -348,6 +360,8 @@ async function saveFullState() {
     last_pack:        localStorage.getItem(KEY_LAST_PACK)   || null,
     last_reward:      localStorage.getItem(KEY_LAST_REWARD) || null,
     pending_listings: pending.length > 0 ? pending : undefined,
+    referrer_id:      getReferrerId() || undefined,
+    spend_bonus:      opts.spend_bonus || undefined,
   });
 
   // Try regular fetch first (works on desktop/Android, readable response)
@@ -393,6 +407,8 @@ async function loadFromServer() {
     if (data.last_pack)   localStorage.setItem(KEY_LAST_PACK,   data.last_pack);
     if (data.last_reward) localStorage.setItem(KEY_LAST_REWARD, data.last_reward);
     if (data.username)    localStorage.setItem(KEY_USERNAME,    data.username);
+    // Bonus packs from server (source of truth)
+    if (data.bonus_packs > getBonusPacks()) setBonusPacks(data.bonus_packs);
   } catch {}
 }
 
@@ -585,6 +601,17 @@ function initTelegram() {
     if (user) {
       const name = [user.first_name, user.last_name].filter(Boolean).join(' ') || user.username || 'Trainer';
       setUsername(name);
+    }
+  } catch {}
+
+  // Capture referrer from deep link (?startapp=ref_USERID)
+  try {
+    const sp = tg.initDataUnsafe?.start_param || '';
+    if (sp.startsWith('ref_') && !localStorage.getItem(KEY_REFERRER)) {
+      const refId = sp.slice(4);
+      if (refId && refId !== String(tg.initDataUnsafe?.user?.id)) {
+        localStorage.setItem(KEY_REFERRER, refId);
+      }
     }
   } catch {}
 }
@@ -881,7 +908,7 @@ function renderHomeScreen() {
     dbg.style.cssText = 'font-size:10px;color:rgba(255,255,255,0.4);text-align:center;padding:2px 8px';
     document.getElementById('screen-welcome').appendChild(dbg);
   }
-  dbg.textContent = `v48 ID:${getTelegramId()} cards:${collection.length} tg:${tgCloud()?1:0}`;
+  dbg.textContent = `v49 ID:${getTelegramId()} cards:${collection.length} tg:${tgCloud()?1:0}`;
 
   const nameEl = document.getElementById('home-trainer-name');
   const avatarEl = document.getElementById('home-avatar');
@@ -918,6 +945,13 @@ function renderHomeScreen() {
     }
   }
 
+  // Bonus packs
+  const bonusCount = getBonusPacks();
+  const bonusSection = document.getElementById('bonus-pack-section');
+  if (bonusSection) bonusSection.classList.toggle('hidden', bonusCount === 0);
+  const bonusCountEl = document.getElementById('bonus-pack-count');
+  if (bonusCountEl) bonusCountEl.textContent = String(bonusCount);
+
   // Pack timer
   updateHomePackTimer();
   if (homeTimerInterval) clearInterval(homeTimerInterval);
@@ -938,6 +972,67 @@ function updateHomePackTimer() {
     sub.textContent   = 'Next pack in';
     timer.textContent = formatTime(msUntilNextPack());
     if (btn) btn.disabled = true;
+  }
+}
+
+// ============================================================
+// BONUS PACK & REFERRAL
+// ============================================================
+
+async function openBonusPack() {
+  const bonus = getBonusPacks();
+  if (bonus <= 0) return;
+
+  const btn = document.getElementById('btn-open-bonus-pack');
+  if (btn) btn.disabled = true;
+
+  try {
+    showLoading(true);
+    const cards = rollMiniPack(5);
+    await prefetchImages(cards);
+    showLoading(false);
+
+    addToCollection(cards);
+    setBonusPacks(bonus - 1);
+
+    await runPackOpeningSequence(cards, showResultsScreen);
+    renderHomeScreen();
+    saveFullState({ spend_bonus: 1 });
+    submitCurrentScore();
+  } catch (err) {
+    console.error('Bonus pack error:', err);
+    showLoading(false);
+    if (btn) btn.disabled = false;
+  }
+}
+
+let _botDeepLink = null;
+
+async function shareReferralLink() {
+  const userId = getTelegramId();
+  if (!userId) { showToast('Not logged in'); return; }
+
+  if (_botDeepLink === null) {
+    try {
+      const r = await fetch(`${API_URL}/api/config`);
+      const cfg = await r.json();
+      _botDeepLink = cfg.botDeepLink || '';
+    } catch { _botDeepLink = ''; }
+  }
+
+  if (!_botDeepLink) {
+    showToast('Bot link not configured on server');
+    return;
+  }
+
+  const refUrl  = `${_botDeepLink}?startapp=ref_${userId}`;
+  const text    = 'Join me in Pokémon TCG: Packs! 🎮 Open your first pack and we both get a bonus!';
+  const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(refUrl)}&text=${encodeURIComponent(text)}`;
+
+  try {
+    window.Telegram?.WebApp?.openTelegramLink(shareUrl);
+  } catch {
+    try { await navigator.clipboard.writeText(refUrl); showToast('Link copied!'); } catch { showToast(refUrl); }
   }
 }
 
@@ -1727,6 +1822,10 @@ async function main() {
   document.getElementById('btn-list-confirm').addEventListener('click', confirmListing);
   document.getElementById('btn-list-cancel').addEventListener('click', closeListModal);
   document.getElementById('list-modal-backdrop').addEventListener('click', closeListModal);
+
+  // Wire up bonus pack & referral
+  document.getElementById('btn-open-bonus-pack')?.addEventListener('click', openBonusPack);
+  document.getElementById('btn-share-referral')?.addEventListener('click', shareReferralLink);
 
   // Wire up rating refresh
   document.getElementById('btn-refresh-rating').addEventListener('click', loadRatingScreen);

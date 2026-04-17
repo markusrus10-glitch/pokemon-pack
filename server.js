@@ -33,6 +33,9 @@ app.use((req, res, next) => {
 app.use(express.static(__dirname));
 
 // ── DB INIT ──────────────────────────────────────────────────
+// Bot deep link prefix for referral links — set this to your bot's startapp link
+const BOT_DEEP_LINK = process.env.BOT_DEEP_LINK || '';
+
 db.exec(`
   CREATE TABLE IF NOT EXISTS users (
     telegram_id  TEXT PRIMARY KEY,
@@ -43,7 +46,9 @@ db.exec(`
     avatar_id    INTEGER NOT NULL DEFAULT 0,
     last_pack    TEXT,
     last_reward  TEXT,
-    updated_at   TEXT    NOT NULL DEFAULT ''
+    updated_at   TEXT    NOT NULL DEFAULT '',
+    bonus_packs  INTEGER NOT NULL DEFAULT 0,
+    referred_by  TEXT
   );
   CREATE TABLE IF NOT EXISTS market (
     uid          TEXT PRIMARY KEY,
@@ -70,6 +75,10 @@ const stmtUpsertUser = db.prepare(`
     last_reward = excluded.last_reward,
     updated_at  = excluded.updated_at
 `);
+
+// Add new columns if they don't exist yet (safe migration)
+try { db.exec('ALTER TABLE users ADD COLUMN bonus_packs INTEGER NOT NULL DEFAULT 0'); } catch {}
+try { db.exec('ALTER TABLE users ADD COLUMN referred_by TEXT'); } catch {}
 
 // ── USER API ─────────────────────────────────────────────────
 // Handles both: user lookup AND listing (format: sell_{seller}_{uid}_{price}_{tcg})
@@ -98,7 +107,7 @@ app.get('/api/user/:id', (req, res) => {
   }
   const row = stmtGetUser.get(id);
   if (!row) return res.json(null);
-  res.json({ ...row, collection: JSON.parse(row.collection || '[]') });
+  res.json({ ...row, collection: JSON.parse(row.collection || '[]'), bonus_packs: row.bonus_packs || 0 });
 });
 
 const stmtInsertListing = db.prepare(`
@@ -134,7 +143,32 @@ app.post('/api/user/:id', (req, res) => {
       }
     }
   }
+  // Referral: credit bonus pack to referrer (only once per new user)
+  if (b.referrer_id) {
+    const uid  = req.params.id;
+    const existing = stmtGetUser.get(uid);
+    if (!existing || !existing.referred_by) {
+      // Mark this user as referred so we don't double-credit
+      db.prepare('UPDATE users SET referred_by = ? WHERE telegram_id = ?')
+        .run(String(b.referrer_id), uid);
+      // Give referrer one bonus pack
+      db.prepare('UPDATE users SET bonus_packs = bonus_packs + 1 WHERE telegram_id = ?')
+        .run(String(b.referrer_id));
+    }
+  }
+
+  // Spend bonus packs: client sends spend_bonus > 0 when opening a bonus pack
+  if (Number(b.spend_bonus) > 0) {
+    db.prepare('UPDATE users SET bonus_packs = MAX(0, bonus_packs - ?) WHERE telegram_id = ?')
+      .run(Number(b.spend_bonus), req.params.id);
+  }
+
   res.json({ ok: true });
+});
+
+// ── CONFIG ────────────────────────────────────────────────────
+app.get('/api/config', (_req, res) => {
+  res.json({ botDeepLink: BOT_DEEP_LINK });
 });
 
 // ── LEADERBOARD ───────────────────────────────────────────────
