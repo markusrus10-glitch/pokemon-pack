@@ -127,15 +127,19 @@ app.get('/api/leaderboard', (_req, res) => {
   res.json(rows);
 });
 
-// ── MARKET LIST VIA GET (iOS workaround — GET never blocked by WKWebView) ────
-app.get('/api/list', (req, res) => {
-  const { uid, seller_id, seller_name, card, price } = req.query;
-  if (!uid || !seller_id || !card || !price) return res.status(400).json({ error: 'missing fields' });
+// ── MARKET LIST VIA GET PATH PARAMS (iOS: query strings blocked, path params work) ─
+// URL: /api/list/:seller_id/:uid/:price/:cardBase64url
+app.get('/api/list/:seller_id/:uid/:price/:card', (req, res) => {
   try {
+    const { seller_id, uid, price, card: cardB64 } = req.params;
+    if (!seller_id || !uid || !price || !cardB64) return res.status(400).json({ error: 'missing' });
+    const card = JSON.parse(Buffer.from(cardB64.replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('utf8'));
+    const user = stmtGetUser.get(seller_id);
+    const seller_name = (user && user.username) || 'Trader';
     db.prepare('INSERT OR IGNORE INTO market (uid, seller_id, seller_name, card, price, listed_at) VALUES (?, ?, ?, ?, ?, ?)')
-      .run(uid, String(seller_id), String(seller_name || 'Trader').slice(0, 64), card, Number(price), new Date().toISOString());
+      .run(uid, String(seller_id), seller_name.slice(0, 64), JSON.stringify(card), Number(price), new Date().toISOString());
     res.json({ ok: true });
-  } catch { res.status(500).json({ error: 'db error' }); }
+  } catch (e) { res.status(400).json({ error: 'invalid' }); }
 });
 
 // ── MARKET ───────────────────────────────────────────────────
