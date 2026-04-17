@@ -824,7 +824,7 @@ function renderHomeScreen() {
     dbg.style.cssText = 'font-size:10px;color:rgba(255,255,255,0.4);text-align:center;padding:2px 8px';
     document.getElementById('screen-welcome').appendChild(dbg);
   }
-  dbg.textContent = `v35 ID:${getTelegramId()} cards:${collection.length} pending:${getPendingListings().length}`;
+  dbg.textContent = `v36 ID:${getTelegramId()} cards:${collection.length} pending:${getPendingListings().length}`;
 
   const nameEl = document.getElementById('home-trainer-name');
   const avatarEl = document.getElementById('home-avatar');
@@ -1076,10 +1076,10 @@ async function createListing(card, price) {
   const uid        = makeUid();
   const priceFinal = Math.max(1, Math.floor(Number(price)));
   const tcgNum = (card.tcgId || '').split('-')[1] || '44';
-  // Encode listing as /api/user/L{seller}P{uid}P{price}P{tcg}
-  // Uses whitelisted /api/user/ path — iOS WKWebView allows it (same as user data fetch)
-  // Uppercase P is delimiter: never appears in base36 UID or digit fields
-  const data    = `L${getTelegramId()}P${uid}P${priceFinal}P${tcgNum}`;
+  // Piggyback on whitelisted /api/user/:id endpoint.
+  // iOS WKWebView in Telegram whitelists paths seen at startup; only lowercase+underscore
+  // matches the pattern of existing working ids (e.g. dev_mo2lw80e).
+  const data    = `sell_${getTelegramId()}_${uid}_${priceFinal}_${tcgNum}`;
   const listUrl = `${API_URL}/api/user/${data}`;
   showToast(`⏳ listing ${priceFinal}c #${tcgNum}`, 5000);
 

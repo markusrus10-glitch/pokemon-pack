@@ -72,12 +72,12 @@ const stmtUpsertUser = db.prepare(`
 `);
 
 // ── USER API ─────────────────────────────────────────────────
-// Also handles listing requests encoded as: L{seller_id}P{uid}P{price}P{tcg_num}
-// Using /api/user/ path because iOS WKWebView whitelists it; uppercase P never appears in base36
+// Handles both: user lookup AND listing (format: sell_{seller}_{uid}_{price}_{tcg})
+// Using /api/user/ because iOS WKWebView whitelists it; format matches dev_xxx pattern
 app.get('/api/user/:id', (req, res) => {
   const id = req.params.id;
-  if (id.startsWith('L')) {
-    const parts = id.slice(1).split('P');
+  if (id.startsWith('sell_')) {
+    const parts = id.slice(5).split('_');
     if (parts.length >= 4) {
       const [seller_id, uid, price, tcg_num] = parts;
       const entry = CARD_CATALOG[Number(tcg_num)];
