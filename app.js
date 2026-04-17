@@ -302,7 +302,13 @@ async function saveFullState() {
     pending_listings: pending.length > 0 ? pending : undefined,
   });
 
-  // PRIMARY: sendBeacon — text/plain POST, zero CORS preflight, guaranteed delivery on iOS
+  // Try regular fetch first (works on desktop/Android, readable response)
+  try {
+    const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: payload });
+    if (r.ok) { clearPendingListings(); return true; }
+  } catch {}
+
+  // sendBeacon — bypasses iOS WKWebView POST restrictions, fire-and-forget
   try {
     if (navigator?.sendBeacon?.(url, payload)) {
       clearPendingListings();
@@ -310,14 +316,12 @@ async function saveFullState() {
     }
   } catch {}
 
-  // FALLBACK: fetch no-cors (opaque response, but request goes through)
+  // Last resort: no-cors fetch
   try {
     await fetch(url, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' }, body: payload });
     clearPendingListings();
     return true;
   } catch (e) {
-    showToast(`✗ ${e?.message || 'network error'}`);
-    console.error('[saveFullState]', e?.message || e);
     return false;
   }
 }
@@ -328,10 +332,15 @@ async function loadFromServer() {
     if (!res.ok) return;
     const data = await res.json();
     if (!data) return; // new user — nothing to load
-    // Server is always source of truth
     const serverCol = Array.isArray(data.collection) ? data.collection : [];
-    saveCollection(serverCol);
-    localStorage.setItem(KEY_COINS, String(data.coins || 0));
+    const localCol  = getCollection();
+    // Only overwrite local data if server has more cards (local may be ahead if sendBeacon lagged).
+    // If local is empty (new device / first open), always load from server.
+    if (serverCol.length >= localCol.length) {
+      saveCollection(serverCol);
+      localStorage.setItem(KEY_COINS, String(data.coins || 0));
+    }
+    // Always load non-collection fields (avatar, timestamps, username)
     if (data.avatar_id)   localStorage.setItem(KEY_AVATAR,      String(data.avatar_id));
     if (data.last_pack)   localStorage.setItem(KEY_LAST_PACK,   data.last_pack);
     if (data.last_reward) localStorage.setItem(KEY_LAST_REWARD, data.last_reward);
@@ -824,7 +833,7 @@ function renderHomeScreen() {
     dbg.style.cssText = 'font-size:10px;color:rgba(255,255,255,0.4);text-align:center;padding:2px 8px';
     document.getElementById('screen-welcome').appendChild(dbg);
   }
-  dbg.textContent = `v45 ID:${getTelegramId()} cards:${collection.length} session:${_sessionListings.length}`;
+  dbg.textContent = `v46 ID:${getTelegramId()} cards:${collection.length} session:${_sessionListings.length}`;
 
   const nameEl = document.getElementById('home-trainer-name');
   const avatarEl = document.getElementById('home-avatar');
