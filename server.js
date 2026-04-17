@@ -200,11 +200,13 @@ const CARD_CATALOG = {
   69:{name:'Weedle',    hp:40,  rarity:'common',   css:'common',    label:'◆',   value:50},
 };
 
-// ── MARKET LIST — GET with tcg_num only (no base64, iOS-safe) ─
-// URL: /api/market/new/:seller_id/:uid/:price/:tcg_num
-// All path segments are digits/alphanumeric — guaranteed to reach Node.js from iOS WKWebView
-app.get('/api/market/new/:seller_id/:uid/:price/:tcg_num', (req, res) => {
-  const { seller_id, uid, price, tcg_num } = req.params;
+// ── MARKET LIST — single segment with dots (iOS WKWebView safe) ──
+// URL: /api/market/new/:data  where data = "seller_id.uid.price.tcg_num"
+// One path segment, dot-separated, no slashes — works on all iOS versions
+app.get('/api/market/new/:data', (req, res) => {
+  const parts = req.params.data.split('.');
+  if (parts.length < 4) return res.status(400).json({ error: 'bad params' });
+  const [seller_id, uid, price, tcg_num] = parts;
   const entry = CARD_CATALOG[Number(tcg_num)];
   if (!entry) return res.status(400).json({ error: 'unknown card' });
   const user = stmtGetUser.get(String(seller_id));

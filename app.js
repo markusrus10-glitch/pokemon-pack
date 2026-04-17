@@ -824,7 +824,7 @@ function renderHomeScreen() {
     dbg.style.cssText = 'font-size:10px;color:rgba(255,255,255,0.4);text-align:center;padding:2px 8px';
     document.getElementById('screen-welcome').appendChild(dbg);
   }
-  dbg.textContent = `v32 ID:${getTelegramId()} cards:${collection.length} pending:${getPendingListings().length}`;
+  dbg.textContent = `v33 ID:${getTelegramId()} cards:${collection.length} pending:${getPendingListings().length}`;
 
   const nameEl = document.getElementById('home-trainer-name');
   const avatarEl = document.getElementById('home-avatar');
@@ -1079,8 +1079,10 @@ async function createListing(card, price) {
   // URL: /api/market/new/:seller_id/:uid/:price/:tcg_num
   // Pure digits/alphanumeric — no base64, no special chars — guaranteed to work on iOS WKWebView
   const tcgNum  = (card.tcgId || '').split('-')[1] || '44';
-  const listUrl = `${API_URL}/api/market/new/${getTelegramId()}/${uid}/${priceFinal}/${tcgNum}`;
-  showToast(`⏳ GET /new/${priceFinal}/${tcgNum}`, 5000);
+  // One path segment with dots — avoids iOS WKWebView blocking multi-segment paths
+  const data    = `${getTelegramId()}.${uid}.${priceFinal}.${tcgNum}`;
+  const listUrl = `${API_URL}/api/market/new/${data}`;
+  showToast(`⏳ /new/${priceFinal}.${tcgNum}`, 5000);
   const res = await fetch(listUrl);
   if (!res.ok) throw new Error(`list ${res.status}`);
   return {
